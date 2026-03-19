@@ -16,11 +16,11 @@ Beer-Lambert light attenuation: exponential light decay through dense algae cult
 Coupled ODE system: algae density, nutrient concentration, light field
 Parameters to expose: max growth rate, half-saturation constant, light extinction coefficient, initial conditions
 
-Key questions to resolve early
+### Key questions to resolve early
 
-ODE integration method (Euler to start, Runge-Kutta later)
-Whether to treat the light field as a 1D spatial dimension (PDE) or a depth-averaged simplification (ODE)
-Output format for plotting results
+- ODE integration method (Euler to start, Runge-Kutta later)
+- Whether to treat the light field as a 1D spatial dimension (PDE) or a depth-averaged simplification (ODE)
+- Output format for plotting results
 
 ## Key considerations
 - Ensure numerical stability and accuracy in ODE integration
@@ -46,16 +46,19 @@ Output format for plotting results
   - Substrate consumption coupled to biomass production via yield coefficient
   - Stoichiometric mass balance verified (ΔX = ΔS × Y_x/s)
   - Tests cover: zero substrate, positive growth, substrate depletion, mass conservation
+- **Multi-step simulation** (`simulate`)
+  - Runs multiple integration steps and returns time series
+  - Signature: `simulate(num_steps, initial_state, params)` returns `vector<MonodState>`
+  - Returns initial state + num_steps (e.g., 10 steps = 11 states total)
+  - Test verifies biomass increases and substrate decreases over time
 - **CMake build system** with Google Test integration
 
 ### 🚧 In progress
 - None currently
 
 ### ❌ Not started
-- **Multi-step simulation testing**: Verify behavior over many time steps
-- **Simulation loop function**: `simulate(initial_state, params, num_steps)` to run multiple steps
+- **Substrate depletion handling**: Clamp substrate to zero in `simulate()` when depleted
 - **Parameter validation**: Check for invalid inputs (negative values, dt ≤ 0, etc.)
-- **Substrate depletion handling**: Prevent substrate from going negative
 - **CSV export**: Write simulation results for plotting
 - **Beer-Lambert light attenuation**: I(z) = I₀ × exp(-k × X × z)
 - **Light-limited growth**: Couple light intensity to Monod growth rate
@@ -70,6 +73,7 @@ Output format for plotting results
 4. **Testing strategy**: Pure functions first (Monod), then integration (eulerStep), then simulation loop
 5. **Data structures**: Separate `State` (variables) from `Parameters` (constants)
 6. **Mass balance**: Explicit yield coefficient (Y_x/s) to couple biomass growth and substrate consumption
+7. **Programming paradigm**: Functional style with pure functions and immutable data; domain constraints handled at orchestration level (`simulate()`), not in low-level functions (`eulerStep()`)
 
 ## Key assumptions
 - No mortality or maintenance respiration terms (pure growth model)
@@ -80,15 +84,14 @@ Output format for plotting results
 ## Next steps
 
 ### Immediate priorities
-1. **Multi-step simulation test**: Write test that runs 10-100 time steps, verify biomass increases and substrate decreases over time
-2. **Simulation loop**: Implement `simulate()` function that returns time series of states
-3. **Substrate depletion guard**: Ensure substrate cannot go negative (biological constraint)
+1. **Substrate depletion guard**: Add test for substrate depletion, then clamp S to zero in `simulate()` when it would go negative
+2. **Parameter validation**: Fail fast with clear errors for invalid inputs (negative values, dt ≤ 0)
+3. **CSV export**: Write simulation results in column format (time, X, S) for plotting
 
 ### Near-term goals
-4. **Parameter validation**: Fail fast with clear errors for invalid inputs
-5. **CSV export**: Write results in column format (time, X, S) for plotting
-6. **Beer-Lambert function**: Implement light attenuation model
-7. **Couple light to growth**: Modify growth rate based on available light
+4. **Beer-Lambert function**: Implement light attenuation model I(z) = I₀ × exp(-k × X × z)
+5. **Couple light to growth**: Modify growth rate based on available light intensity
+6. **Extended simulation test**: Run longer simulations (100+ steps) to verify numerical stability
 
 ### Future enhancements
 - Runge-Kutta integration (RK2 or RK4) for improved accuracy

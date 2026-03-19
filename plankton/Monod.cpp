@@ -13,3 +13,13 @@ MonodState eulerStep(const MonodState& state, const MonodParameters& params) {
     newState.S -= dS;
     return newState;
 }
+
+std::vector<MonodState> simulate(int num_steps, const MonodState& state, const MonodParameters& params) {
+    std::vector<MonodState> result;
+    result.reserve(num_steps + 1);
+    result.push_back(state);
+    for (int i = 0; i < num_steps; ++i) {
+        result.push_back(eulerStep(result.back(), params));
+    }
+    return result;
+}

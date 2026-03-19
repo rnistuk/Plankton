@@ -54,8 +54,8 @@ TEST(Monod, HighSubstrateApproachesMaxGrowthRate) {
 TEST(Monod, GrowthIncreasesWithSubstrate) {
     // Arrange
     const double S1 = 0.5;
-    const double S2 = 0.5;
-    const double S3 = 0.5;
+    const double S2 = 1.5;
+    const double S3 = 2.0;
 
     // Act
     // Assert
@@ -114,4 +114,20 @@ TEST(Stoichiometry, SubstrateConsumedEqualsBiomassProduced) {
     // Assert
     //EXPECT_DOUBLE_EQ(newState.X - state.X, (state.S-newState.S) * params.Yx_s);
     EXPECT_NEAR(newState.X - state.X, (state.S-newState.S) * params.Yx_s, 1e-9);
+}
+
+TEST(SimulateMultipleSteps, BiomassIncreasesSubstrateDecreases) {
+    // Arrange
+    const MonodState state{1.0, 10.0};
+    const MonodParameters params{KS, MU_MAX, 0.5, 0.1 };
+    const int num_steps = 10;
+
+    // Act
+    const auto result = simulate(num_steps, state, params);
+
+
+    // Assert
+    EXPECT_EQ(result.size(), num_steps + 1);
+    EXPECT_GT(result.back().X, state.X);
+    EXPECT_LT(result.back().S, state.S);
 }
