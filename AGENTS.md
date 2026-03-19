@@ -2,7 +2,7 @@
 Implement a coupled Monod kinetics + Beer-Lambert light attenuation model for algae bioreactor growth in C++, using TDD. Potential portfolio piece targeting Industrial Plankton.
 
 ## Coaching preferences
-**Guide step-by-step.** Provide guidance and design questions rather than complete code solutions unless explicitly requested.
+**Pair programming mode.** Work as a pair programming team - discuss design decisions, review code together, and provide guidance. Do not write code unless explicitly requested. Focus on questions, suggestions, and collaborative problem-solving.
 
 ## Technical preferences
 - C++ (C++23), CLion
@@ -51,12 +51,22 @@ Parameters to expose: max growth rate, half-saturation constant, light extinctio
   - Signature: `simulate(num_steps, initial_state, params)` returns `vector<MonodState>`
   - Returns initial state + num_steps (e.g., 10 steps = 11 states total)
   - Test verifies biomass increases and substrate decreases over time
+- **Demo program** (`main.cpp`)
+  - Runs 100-step simulation with realistic phytoplankton parameters
+  - Outputs time series data: t, X (biomass), S (nutrient)
+  - Includes documented parameter ranges for algae cultures
 - **CMake build system** with Google Test integration
 
 ### 🚧 In progress
 - None currently
 
 ### ❌ Not started
+- **Separate N and P tracking**: Break out nitrogen and phosphorus as separate state variables instead of generic substrate S
+  - Update `MonodState` to include N and P fields
+  - Update `MonodParameters` to include separate Ks_N, Ks_P, Yx_N, Yx_P
+  - Implement dual nutrient limitation (Liebig's law of the minimum)
+  - Update main.cpp output to show t, X, N, P
+  - Update tests for new structure
 - **Substrate depletion handling**: Clamp substrate to zero in `simulate()` when depleted
 - **Parameter validation**: Check for invalid inputs (negative values, dt ≤ 0, etc.)
 - **CSV export**: Write simulation results for plotting

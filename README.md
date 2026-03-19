@@ -63,6 +63,14 @@ This project follows strict TDD methodology:
 
 All model behavior is validated through unit tests before implementation.
 
+## Example Output
+
+The simulation outputs comma-delimited time series data. This plot was generated from that output:
+
+![Plankton Growth Simulation](Resources/DataPlotMar19.svg)
+
+*100-step simulation showing biomass increase (blue) and substrate depletion (red) over 1 day with realistic phytoplankton parameters.*
+
 ## Current Implementation Status
 
 ### ✅ Completed
@@ -70,14 +78,16 @@ All model behavior is validated through unit tests before implementation.
 - Euler integration for single time steps
 - Data structures for state and parameters
 - Stoichiometric mass balance verification
+- Multi-step simulation function returning time series
+- Demo program outputting growth simulation data
 - CMake build system with Google Test
 
 ### 🚧 Planned Features
-- Multi-step simulation loop
 - CSV export for time-series data
+- Substrate depletion handling (clamp to zero)
+- Parameter validation and error handling
 - Beer-Lambert light attenuation model
 - Light-limited growth coupling
-- Parameter validation and error handling
 - Runge-Kutta integration methods
 
 ## Built With

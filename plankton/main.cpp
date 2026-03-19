@@ -1,16 +1,43 @@
+#include "Monod.h"
+#include <iomanip>
 #include <iostream>
 
-// TIP To <b>Run</b> code, press <shortcut actionId="Run"/> or click the <icon src="AllIcons.Actions.Execute"/> icon in the gutter.
+/*
+Initial State
+    X (biomass): 10-100 μg C/mL for a typical culture, up to 1000+ μg C/mL for dense bioreactor cultures
+    S (nutrient):
+    Nitrogen: 1-10 mg N/L (nitrate) for batch culture
+    Phosphorus: 0.1-1 mg P/L (phosphate)
+Monod Parameters
+    μ_max (max growth rate):
+        0.5-2.0 day⁻¹ for most phytoplankton
+        Fast growers (like Nannochloropsis): 1-2 day⁻¹
+        Slow growers (like diatoms): 0.5-1 day⁻¹
+    Ks (half-saturation constant):
+        Nitrogen: 0.1-5 mg N/L (typical: 1-2)
+        Phosphorus: 0.01-0.5 mg P/L (typical: 0.05-0.1)
+    Yx/s (yield coefficient):
+        For nitrogen: ~5-10 mg C / mg N (from Redfield 106:16 ≈ 6.6)
+        For phosphorus: ~50-100 mg C / mg P (from Redfield 106:1 = 106)
+    dt: 0.01-0.1 days (0.25-2.4 hours) for stability
+ */
 int main() {
-    // TIP Press <shortcut actionId="RenameElement"/> when your caret is at the <b>lang</b> variable name to see how CLion can help you rename it.
-    auto lang = "C++";
-    std::cout << "Hello and welcome to " << lang << "!\n";
 
-    for (int i = 1; i <= 5; i++) {
-        // TIP Press <shortcut actionId="Debug"/> to start debugging your code. We have set one <icon src="AllIcons.Debugger.Db_set_breakpoint"/> breakpoint for you, but you can always add more by pressing <shortcut actionId="ToggleLineBreakpoint"/>.
-        std::cout << "i = " << i << std::endl;
+    MonodState initial_state{50.0,5.0};
+    MonodParameters params{1.0, 1.5, 6.6, 0.01};
+    int num_steps = 100;
+
+    auto result = simulate(num_steps, initial_state, params);
+
+    double t{0};
+    std::cout << "\nSimulated Monod plankton growth" << std::endl;
+    std::cout << "t(days), X(biomass,μg C/mL), S(nutrient, mg N/L or mg P/L)" << std::endl;
+    for (auto& state : result) {
+        std::cout << std::fixed << std::setprecision(2) << t << ", "
+        << std::setprecision(4) << state.X << ", " << state.S << std::endl;
+        t += params.dt;
     }
+    std::cout << std::endl;
 
     return 0;
-    // TIP See CLion help at <a href="https://www.jetbrains.com/help/clion/">jetbrains.com/help/clion/</a>. Also, you can try interactive lessons for CLion by selecting 'Help | Learn IDE Features' from the main menu.
 }
