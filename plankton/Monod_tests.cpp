@@ -172,3 +172,39 @@ TEST(SimulateMultipleSteps, BiomassRemainsConstantAfterSubstrateIsZero) {
         ++it;
     }
 }
+
+TEST(ParameterValidation, NegativeKsThrowsException) {
+    // Arrange
+    const MonodState state{1.0, 1.0};
+    const MonodParameters params{-1.0, 1.5, 6.6, 0.1};  // Negative Ks
+
+    // Act & Assert
+    EXPECT_THROW(simulate(10, state, params), std::invalid_argument);
+}
+
+TEST(ParameterValidation, Negativemu_maxThrowsException) {
+    // Arrange
+    const MonodState state{1.0, 1.0};
+    const MonodParameters params{1.0, -1.5, 6.6, 0.1};
+
+    // Act & Assert
+    EXPECT_THROW(simulate(10, state, params), std::invalid_argument);
+}
+
+TEST(ParameterValidation, NegativeYx_sThrowsException) {
+    // Arrange
+    const MonodState state{1.0, 1.0};
+    const MonodParameters params{1.0, 1.5, -6.6, 0.1};
+
+    // Act & Assert
+    EXPECT_THROW(simulate(10, state, params), std::invalid_argument);
+}
+
+TEST(ParameterValidation, NegativeTimeStepThrowsException) {
+    // Arrange
+    const MonodState state{1.0, 1.0};
+    const MonodParameters params{1.0, 1.5, 6.6, -0.1};
+
+    // Act & Assert
+    EXPECT_THROW(simulate(10, state, params), std::invalid_argument);
+}

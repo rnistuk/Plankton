@@ -1,5 +1,28 @@
 #include "Monod.h"
 
+#include <stdexcept>
+
+// Private functions
+void validateParameters(const MonodParameters& params) {
+    if (params.Ks <= 0) {
+        throw std::invalid_argument("Ks must be positive");
+    }
+
+    if (params.mu_max <= 0) {
+        throw std::invalid_argument("mu_max must be positive");
+    }
+
+    if (params.Yx_s <= 0) {
+        throw std::invalid_argument("Yx_s must be positive");
+    }
+
+    if (params.dt <= 0) {
+        throw std::invalid_argument("dt must be positive");
+    }
+}
+
+
+// Public functions
 double Monod(double S, double Ks, double mu_max) {
     return mu_max * S / (Ks + S);
 }
@@ -15,6 +38,8 @@ MonodState eulerStep(const MonodState& state, const MonodParameters& params) {
 }
 
 std::vector<MonodState> simulate(int num_steps, const MonodState& state, const MonodParameters& params) {
+    validateParameters(params);
+
     std::vector<MonodState> result;
     result.reserve(num_steps + 1);
     result.push_back(state);
