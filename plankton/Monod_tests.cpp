@@ -131,3 +131,18 @@ TEST(SimulateMultipleSteps, BiomassIncreasesSubstrateDecreases) {
     EXPECT_GT(result.back().X, state.X);
     EXPECT_LT(result.back().S, state.S);
 }
+
+TEST(SimulateMultipleSteps, SubstrateNeverNegative) {
+    // Arrange
+    const MonodState state{50.0, 5.0};
+    const MonodParameters params{KS, 1.5, 6.6, 0.1 };
+    const int num_steps = 1000;
+
+    // Act
+    const auto result = simulate(num_steps, state, params);
+
+    // Assert
+    for (const auto& s : result) {
+        ASSERT_GE(s.S, 0.0) << "Substrate should never be negative";
+    }
+}

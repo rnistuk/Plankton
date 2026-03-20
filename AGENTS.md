@@ -51,6 +51,7 @@ Parameters to expose: max growth rate, half-saturation constant, light extinctio
   - Signature: `simulate(num_steps, initial_state, params)` returns `vector<MonodState>`
   - Returns initial state + num_steps (e.g., 10 steps = 11 states total)
   - Test verifies biomass increases and substrate decreases over time
+  - Clamps substrate to zero to prevent negative values (numerical safeguard)
 - **Demo program** (`main.cpp`)
   - Runs 100-step simulation with realistic phytoplankton parameters
   - Outputs time series data: t, X (biomass), S (nutrient)
@@ -67,12 +68,16 @@ Parameters to expose: max growth rate, half-saturation constant, light extinctio
   - Implement dual nutrient limitation (Liebig's law of the minimum)
   - Update main.cpp output to show t, X, N, P
   - Update tests for new structure
-- **Substrate depletion handling**: Clamp substrate to zero in `simulate()` when depleted
 - **Parameter validation**: Check for invalid inputs (negative values, dt ≤ 0, etc.)
 - **CSV export**: Write simulation results for plotting
 - **Beer-Lambert light attenuation**: I(z) = I₀ × exp(-k × X × z)
 - **Light-limited growth**: Couple light intensity to Monod growth rate
 - **Advanced integration methods**: Runge-Kutta 2nd or 4th order
+- **Generic integration refactoring**: Extract `eulerStep()` into model-agnostic numerical library
+  - Create generic `eulerStep(state, dt, derivative_function)` that works with any ODE system
+  - Make integration methods reusable across projects
+  - Move model-specific logic (Monod kinetics, stoichiometry) into derivative function
+  - Enable easier addition of RK2/RK4 without duplicating model logic
 - **1D spatial light profile**: Extend from depth-averaged to PDE
 
 ## Design decisions made
@@ -94,7 +99,7 @@ Parameters to expose: max growth rate, half-saturation constant, light extinctio
 ## Next steps
 
 ### Immediate priorities
-1. **Substrate depletion guard**: Add test for substrate depletion, then clamp S to zero in `simulate()` when it would go negative
+1. **Biomass growth cessation test**: Verify that biomass stops growing after substrate is depleted
 2. **Parameter validation**: Fail fast with clear errors for invalid inputs (negative values, dt ≤ 0)
 3. **CSV export**: Write simulation results in column format (time, X, S) for plotting
 

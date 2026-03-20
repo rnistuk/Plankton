@@ -9,7 +9,7 @@ MonodState eulerStep(const MonodState& state, const MonodParameters& params) {
     double mu = Monod(state.S, params.Ks, params.mu_max);
     double dX = mu * state.X * params.dt;
     newState.X += dX;
-    double dS = dX/ params.Yx_s;
+    double dS = dX / params.Yx_s;
     newState.S -= dS;
     return newState;
 }
@@ -19,7 +19,9 @@ std::vector<MonodState> simulate(int num_steps, const MonodState& state, const M
     result.reserve(num_steps + 1);
     result.push_back(state);
     for (int i = 0; i < num_steps; ++i) {
-        result.push_back(eulerStep(result.back(), params));
+        auto next = eulerStep(result.back(), params);
+        next.S = std::max(next.S, 0.0); // The substrate concentration cannot be negative in a physical system, so we fake that here.
+        result.push_back(next);
     }
     return result;
 }
