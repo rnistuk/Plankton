@@ -21,6 +21,15 @@ void validateParameters(const MonodParameters& params) {
     }
 }
 
+void validateState(const MonodState& state) {
+    if (state.X < 0) {
+        throw std::invalid_argument("Biomass cannot be negative");
+    }
+
+    if (state.S < 0) {
+        throw std::invalid_argument("Substrate concentration cannot be negative");
+    }
+}
 
 // Public functions
 double Monod(double S, double Ks, double mu_max) {
@@ -39,6 +48,7 @@ MonodState eulerStep(const MonodState& state, const MonodParameters& params) {
 
 std::vector<MonodState> simulate(int num_steps, const MonodState& state, const MonodParameters& params) {
     validateParameters(params);
+    validateState(state);
 
     std::vector<MonodState> result;
     result.reserve(num_steps + 1);

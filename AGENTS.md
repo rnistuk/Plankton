@@ -58,6 +58,10 @@ Parameters to expose: max growth rate, half-saturation constant, light extinctio
   - Validates all MonodParameters before simulation starts
   - Throws `std::invalid_argument` with descriptive messages for invalid inputs
   - Tests verify proper exceptions for: negative/zero Ks, mu_max, Yx_s, dt
+- **State validation** (`validateState`)
+  - Validates initial MonodState before simulation starts
+  - Throws `std::invalid_argument` for negative biomass or substrate
+  - Tests verify proper exceptions for: negative X, negative S
 - **Demo program** (`main.cpp`)
   - Runs 100-step simulation with realistic phytoplankton parameters
   - Outputs time series data: t, X (biomass), S (nutrient)
@@ -105,7 +109,6 @@ Parameters to expose: max growth rate, half-saturation constant, light extinctio
 
 ### Immediate priorities
 1. **CSV export**: Write simulation results in column format (time, X, S) for plotting
-2. **State validation** (optional): Validate initial state (X >= 0, S >= 0)
 
 ### Near-term goals
 4. **Beer-Lambert function**: Implement light attenuation model I(z) = I₀ × exp(-k × X × z)

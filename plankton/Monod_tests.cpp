@@ -208,3 +208,21 @@ TEST(ParameterValidation, NegativeTimeStepThrowsException) {
     // Act & Assert
     EXPECT_THROW(simulate(10, state, params), std::invalid_argument);
 }
+
+TEST(StateValidation, NegativeBiomassThrowsException) {
+    // Arrange
+    const MonodState state{-1.0, 5.0};  // Negative biomass
+    const MonodParameters params{KS, 1.5, 6.6, 0.1};
+
+    // Act & Assert
+    EXPECT_THROW(simulate(10, state, params), std::invalid_argument);
+}
+
+TEST(StateValidation, NegativeSubstrateThrowsException) {
+    // Arrange
+    const MonodState state{50.0, -5.0};  // Negative substrate
+    const MonodParameters params{KS, 1.5, 6.6, 0.1};
+
+    // Act & Assert
+    EXPECT_THROW(simulate(10, state, params), std::invalid_argument);
+}
