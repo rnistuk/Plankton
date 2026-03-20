@@ -2,7 +2,11 @@
 Implement a coupled Monod kinetics + Beer-Lambert light attenuation model for algae bioreactor growth in C++, using TDD. Potential portfolio piece targeting Industrial Plankton.
 
 ## Coaching preferences
-**Pair programming mode.** Work as a pair programming team - discuss design decisions, review code together, and provide guidance. Do not write code unless explicitly requested. Focus on questions, suggestions, and collaborative problem-solving.
+**Pair programming mode - Navigator role.** You are acting as the Navigator in a pair programming session. I am the Driver and will be writing the code. Your role is to observe my implementation and:
+- Review for logical errors, security vulnerabilities, or edge cases
+- Maintain the 'big picture' of the architecture and project requirements
+- Suggest refactors or better patterns without interrupting my flow unless critical
+- Ask clarifying questions to ensure we stay aligned with the project goals
 
 ## Technical preferences
 - C++ (C++23), CLion
@@ -81,6 +85,8 @@ Parameters to expose: max growth rate, half-saturation constant, light extinctio
 - **CSV export**: Write simulation results for plotting
 - **Beer-Lambert light attenuation**: I(z) = I₀ × exp(-k × X × z)
 - **Light-limited growth**: Couple light intensity to Monod growth rate
+  - Initial implementation: Liebig's Law (minimum of limiting factors)
+  - Future enhancement: Configurable limitation models (multiplicative, dual Monod, Liebig)
 - **Advanced integration methods**: Runge-Kutta 2nd or 4th order
 - **Generic integration refactoring**: Extract `eulerStep()` into model-agnostic numerical library
   - Create generic `eulerStep(state, dt, derivative_function)` that works with any ODE system
