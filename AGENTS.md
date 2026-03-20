@@ -52,6 +52,8 @@ Parameters to expose: max growth rate, half-saturation constant, light extinctio
   - Returns initial state + num_steps (e.g., 10 steps = 11 states total)
   - Test verifies biomass increases and substrate decreases over time
   - Clamps substrate to zero to prevent negative values (numerical safeguard)
+  - Test verifies substrate never goes negative throughout simulation
+  - Test verifies biomass remains constant after substrate depletion
 - **Demo program** (`main.cpp`)
   - Runs 100-step simulation with realistic phytoplankton parameters
   - Outputs time series data: t, X (biomass), S (nutrient)
@@ -99,9 +101,8 @@ Parameters to expose: max growth rate, half-saturation constant, light extinctio
 ## Next steps
 
 ### Immediate priorities
-1. **Biomass growth cessation test**: Verify that biomass stops growing after substrate is depleted
-2. **Parameter validation**: Fail fast with clear errors for invalid inputs (negative values, dt ≤ 0)
-3. **CSV export**: Write simulation results in column format (time, X, S) for plotting
+1. **Parameter validation**: Fail fast with clear errors for invalid inputs (negative values, dt ≤ 0)
+2. **CSV export**: Write simulation results in column format (time, X, S) for plotting
 
 ### Near-term goals
 4. **Beer-Lambert function**: Implement light attenuation model I(z) = I₀ × exp(-k × X × z)

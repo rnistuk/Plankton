@@ -79,7 +79,7 @@ The simulation outputs comma-delimited time series data. This plot was generated
 - Data structures for state and parameters
 - Stoichiometric mass balance verification
 - Multi-step simulation function returning time series
-- Substrate depletion handling (clamp to zero)
+- Substrate depletion handling (clamp to zero, growth cessation verified)
 - Demo program outputting growth simulation data
 - CMake build system with Google Test
 

@@ -1,5 +1,7 @@
 #include "Monod.h"
 
+#include <algorithm>
+#include <chrono>
 #include <gtest/gtest.h>
 
 constexpr double KS = 1.0;     // Half-saturation constant (or affinity constant)
@@ -144,5 +146,29 @@ TEST(SimulateMultipleSteps, SubstrateNeverNegative) {
     // Assert
     for (const auto& s : result) {
         ASSERT_GE(s.S, 0.0) << "Substrate should never be negative";
+    }
+}
+
+TEST(SimulateMultipleSteps, BiomassRemainsConstantAfterSubstrateIsZero) {
+    // Arrange
+    const MonodState state{50.0, 5.0};
+    const MonodParameters params{KS, 1.5, 6.6, 0.1 };
+    const int num_steps = 1000;
+
+    //Act
+    const auto results = simulate(num_steps, state, params);
+
+    // Assert
+    auto it = std::find_if(results.begin(), results.end(), [](const auto& r) {
+        return r.S == 0.0;
+    });
+
+    ASSERT_NE(it, results.end()) << "No state with substrate zero found";
+    auto last_biomass = it->X;
+    ++it;
+    while (it != results.end()) {
+        ASSERT_NEAR(it->X, last_biomass, 1e-9) << "Biomass should remain constant after substrate is zero";
+        last_biomass = it->X;
+        ++it;
     }
 }
