@@ -54,6 +54,10 @@ Parameters to expose: max growth rate, half-saturation constant, light extinctio
   - Clamps substrate to zero to prevent negative values (numerical safeguard)
   - Test verifies substrate never goes negative throughout simulation
   - Test verifies biomass remains constant after substrate depletion
+- **Parameter validation** (`validateParameters`)
+  - Validates all MonodParameters before simulation starts
+  - Throws `std::invalid_argument` with descriptive messages for invalid inputs
+  - Tests verify proper exceptions for: negative/zero Ks, mu_max, Yx_s, dt
 - **Demo program** (`main.cpp`)
   - Runs 100-step simulation with realistic phytoplankton parameters
   - Outputs time series data: t, X (biomass), S (nutrient)
@@ -70,7 +74,6 @@ Parameters to expose: max growth rate, half-saturation constant, light extinctio
   - Implement dual nutrient limitation (Liebig's law of the minimum)
   - Update main.cpp output to show t, X, N, P
   - Update tests for new structure
-- **Parameter validation**: Check for invalid inputs (negative values, dt ≤ 0, etc.)
 - **CSV export**: Write simulation results for plotting
 - **Beer-Lambert light attenuation**: I(z) = I₀ × exp(-k × X × z)
 - **Light-limited growth**: Couple light intensity to Monod growth rate
@@ -101,8 +104,8 @@ Parameters to expose: max growth rate, half-saturation constant, light extinctio
 ## Next steps
 
 ### Immediate priorities
-1. **Parameter validation**: Fail fast with clear errors for invalid inputs (negative values, dt ≤ 0)
-2. **CSV export**: Write simulation results in column format (time, X, S) for plotting
+1. **CSV export**: Write simulation results in column format (time, X, S) for plotting
+2. **State validation** (optional): Validate initial state (X >= 0, S >= 0)
 
 ### Near-term goals
 4. **Beer-Lambert function**: Implement light attenuation model I(z) = I₀ × exp(-k × X × z)

@@ -80,12 +80,12 @@ The simulation outputs comma-delimited time series data. This plot was generated
 - Stoichiometric mass balance verification
 - Multi-step simulation function returning time series
 - Substrate depletion handling (clamp to zero, growth cessation verified)
+- Parameter validation with descriptive error messages
 - Demo program outputting growth simulation data
 - CMake build system with Google Test
 
 ### 🚧 Planned Features
 - CSV export for time-series data
-- Parameter validation and error handling
 - Beer-Lambert light attenuation model
 - Light-limited growth coupling
 - Runge-Kutta integration methods
