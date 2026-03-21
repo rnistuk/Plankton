@@ -81,13 +81,17 @@ The simulation outputs comma-delimited time series data. This plot was generated
 - Multi-step simulation function returning time series
 - Substrate depletion handling (clamp to zero, growth cessation verified)
 - Parameter and state validation with descriptive error messages
+- ReactorGeometry structure with constructor validation
 - Demo program outputting growth simulation data
 - CMake build system with Google Test
 
-### 🚧 Planned Features
+### 🚧 In Progress
+- Beer-Lambert light attenuation model with depth-averaged light limitation
+
+### 🔮 Planned Features
 - CSV export for time-series data
-- Beer-Lambert light attenuation model
-- Light-limited growth coupling
+- Light-limited growth coupling using Liebig's Law
+- Refactor validation to use constructor pattern consistently
 - Runge-Kutta integration methods
 
 ## Built With

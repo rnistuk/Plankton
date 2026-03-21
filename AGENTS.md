@@ -66,6 +66,11 @@ Parameters to expose: max growth rate, half-saturation constant, light extinctio
   - Validates initial MonodState before simulation starts
   - Throws `std::invalid_argument` for negative biomass or substrate
   - Tests verify proper exceptions for: negative X, negative S
+- **ReactorGeometry structure**
+  - Defines physical reactor parameters: depth (m), I0 (surface irradiance), k (extinction coefficient)
+  - Constructor validates all parameters (depth > 0, I0 > 0, k > 0)
+  - Throws `std::invalid_argument` for invalid parameters
+  - Tests verify construction and validation behavior
 - **Demo program** (`main.cpp`)
   - Runs 100-step simulation with realistic phytoplankton parameters
   - Outputs time series data: t, X (biomass), S (nutrient)
@@ -73,7 +78,7 @@ Parameters to expose: max growth rate, half-saturation constant, light extinctio
 - **CMake build system** with Google Test integration
 
 ### 🚧 In progress
-- None currently
+- **Beer-Lambert light attenuation model**: Implementing depth-averaged light limitation for algae growth
 
 ### ❌ Not started
 - **Separate N and P tracking**: Break out nitrogen and phosphorus as separate state variables instead of generic substrate S
@@ -88,6 +93,11 @@ Parameters to expose: max growth rate, half-saturation constant, light extinctio
   - Initial implementation: Liebig's Law (minimum of limiting factors)
   - Future enhancement: Configurable limitation models (multiplicative, dual Monod, Liebig)
 - **Advanced integration methods**: Runge-Kutta 2nd or 4th order
+- **Refactor validation to use constructor pattern**: Move validation from external functions to constructors
+  - Add constructors to MonodParameters and MonodState with validation
+  - Remove external validateParameters() and validateState() functions
+  - Consistent with ReactorGeometry's constructor validation approach
+  - Makes it impossible to create invalid objects (fail-fast at construction)
 - **Generic integration refactoring**: Extract `eulerStep()` into model-agnostic numerical library
   - Create generic `eulerStep(state, dt, derivative_function)` that works with any ODE system
   - Make integration methods reusable across projects
