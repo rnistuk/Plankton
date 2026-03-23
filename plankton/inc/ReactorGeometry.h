@@ -18,7 +18,7 @@ private:
             throw std::invalid_argument("depth must be greater than zero");
         }
 
-        if (I0 < 0) {
+        if (I0 <= 0) {
             throw std::invalid_argument("I0 must be greater than zero");
         }
 
