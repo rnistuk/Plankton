@@ -8,7 +8,9 @@ add_executable(Plankton main.cpp
         inc/ReactorGeometry.h
         inc/MonodState.h
         inc/MonodParameters.h
-        inc/SimulationParameters.h)
+        inc/SimulationParameters.h
+        inc/BeerLambert.h
+        src/beerLambert.cpp)
 
 add_executable(PlanktonTests
         test_main.cpp
@@ -21,6 +23,8 @@ add_executable(PlanktonTests
         inc/MonodState.h
         inc/MonodParameters.h
         inc/SimulationParameters.h
+        inc/BeerLambert.h
+        src/beerLambert.cpp
 )
 
 include_directories(inc)

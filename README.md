@@ -52,6 +52,8 @@ The test suite validates:
 - **Substrate consumption** - Coupled to biomass via yield coefficient
 - **Stoichiometric mass balance** - ΔX = ΔS × Y_x/s
 - **Edge cases** - Zero substrate, saturation conditions
+- **Beer-Lambert light attenuation** - Point irradiance and depth-averaged irradiance
+- **Reactor geometry validation** - Constructor-enforced parameter constraints
 
 ### Test-Driven Development Approach
 
@@ -82,15 +84,14 @@ The simulation outputs comma-delimited time series data. This plot was generated
 - Substrate depletion handling (clamp to zero, growth cessation verified)
 - Parameter and state validation with descriptive error messages
 - ReactorGeometry structure with constructor validation
+- Beer-Lambert point irradiance model: I(z) = I₀ × exp(-k × X × z)
+- Depth-averaged irradiance model for well-mixed reactor
 - Demo program outputting growth simulation data
 - CMake build system with Google Test
 
-### 🚧 In Progress
-- Beer-Lambert light attenuation model with depth-averaged light limitation
-
 ### 🔮 Planned Features
-- CSV export for time-series data
 - Light-limited growth coupling using Liebig's Law
+- CSV export for time-series data
 - Refactor validation to use constructor pattern consistently
 - Runge-Kutta integration methods
 

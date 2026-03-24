@@ -71,6 +71,11 @@ Parameters to expose: max growth rate, half-saturation constant, light extinctio
   - Constructor validates all parameters (depth > 0, I0 > 0, k > 0)
   - Throws `std::invalid_argument` for invalid parameters
   - Tests verify construction and validation behavior
+- **Beer-Lambert light attenuation** (`beerLambert`, `depthAveragedIrradiance`)
+  - `beerLambert(z, geometry, X)`: point irradiance I(z) = I₀ × exp(-k × X × z)
+  - `depthAveragedIrradiance(geometry, X)`: depth-integrated average over full reactor depth
+  - Handles X = 0 edge case (returns I₀ — no biomass, no attenuation)
+  - Tests cover: surface boundary condition, monotonicity with depth and biomass, analytical value, zero biomass
 - **Demo program** (`main.cpp`)
   - Runs 100-step simulation with realistic phytoplankton parameters
   - Outputs time series data: t, X (biomass), S (nutrient)
@@ -78,7 +83,7 @@ Parameters to expose: max growth rate, half-saturation constant, light extinctio
 - **CMake build system** with Google Test integration
 
 ### 🚧 In progress
-- **Beer-Lambert light attenuation model**: Implementing depth-averaged light limitation for algae growth
+- **Light-limited growth**: Couple `depthAveragedIrradiance` to Monod growth rate via Liebig's Law
 
 ### ❌ Not started
 - **Separate N and P tracking**: Break out nitrogen and phosphorus as separate state variables instead of generic substrate S
@@ -124,12 +129,11 @@ Parameters to expose: max growth rate, half-saturation constant, light extinctio
 ## Next steps
 
 ### Immediate priorities
-1. **CSV export**: Write simulation results in column format (time, X, S) for plotting
+1. **Couple light to growth**: Add `Ki` to `MonodParameters`, modify `eulerStep` to accept `depthAveragedIrradiance` and apply Liebig's Law: µ = µ_max × min(S/(Ks+S), I_avg/(Ki+I_avg))
 
 ### Near-term goals
-4. **Beer-Lambert function**: Implement light attenuation model I(z) = I₀ × exp(-k × X × z)
-5. **Couple light to growth**: Modify growth rate based on available light intensity
-6. **Extended simulation test**: Run longer simulations (100+ steps) to verify numerical stability
+2. **CSV export**: Write simulation results in column format (time, X, S) for plotting
+3. **Extended simulation test**: Run longer simulations (100+ steps) to verify numerical stability with light coupling
 
 ### Future enhancements
 - Runge-Kutta integration (RK2 or RK4) for improved accuracy
