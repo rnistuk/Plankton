@@ -28,15 +28,15 @@ Monod Parameters
  */
 int main() {
     // TODO: the reactor geometry values are hard coded for now.
-    double depth = 0.05; // 5 cm
-    double I0 = 200.0; // moderate sunlight
-    double k = 0.2;
+    constexpr double depth = 0.05; // 5 cm
+    constexpr double I0 = 200.0; // moderate sunlight
+    constexpr double k = 0.2;
     const auto geometry = ReactorGeometry(depth, I0, k);
-    MonodState initial_state{50.0,5.0};
-    MonodParameters params{1.0, 1.5, 6.6, 100.0, 0.01};
-    int num_steps = 100;
+    constexpr MonodState initial_state{0.05,5.0};
+    const MonodParameters params{1.0, 1.5, 6.6, 100.0, 0.01};
+    constexpr int num_steps = 1000;
 
-    auto result = simulate(num_steps, initial_state, params, geometry);
+    const auto result = simulate(num_steps, initial_state, params, geometry);
 
     double t{0};
     std::cout << "\nSimulated Monod plankton growth" << std::endl;

@@ -91,6 +91,11 @@ Parameters to expose: max growth rate, half-saturation constant, light extinctio
 - **CMake build system** with Google Test integration
 
 ### ❌ Not started
+- **Mortality/decay term**: Add specific death rate `kd` to `MonodParameters` and `eulerStep`
+  - `dX/dt = µ × X - kd × X`
+  - Typical values: 0.05–0.3 day⁻¹ for phytoplankton
+  - Produces growth → peak → decline dynamics; makes self-shading effects visible in plots
+  - Add `kd` validation (must be non-negative; zero = current pure-growth behaviour)
 - **CSV export**: Write simulation results for plotting
 - **Separate N and P tracking**: Break out nitrogen and phosphorus as separate state variables instead of generic substrate S
   - Update `MonodState` to include N and P fields
@@ -122,7 +127,7 @@ Parameters to expose: max growth rate, half-saturation constant, light extinctio
 7. **Programming paradigm**: Functional style with pure functions and immutable data; domain constraints handled at orchestration level (`simulate()`), not in low-level functions (`eulerStep()`)
 
 ## Key assumptions
-- No mortality or maintenance respiration terms (pure growth model)
+- No mortality or maintenance respiration terms (pure growth model) — **planned for removal**
 - Depth-averaged light intensity (for initial version)
 - No spatial gradients (well-mixed reactor assumption)
 - Temperature and pH are optimal (not explicitly modeled)
@@ -130,7 +135,8 @@ Parameters to expose: max growth rate, half-saturation constant, light extinctio
 ## Next steps
 
 ### Immediate priorities
-1. **CSV export**: Write simulation results in column format (time, X, S) for plotting
+1. **Mortality/decay term**: Add `kd` to `MonodParameters` and `eulerStep` to enable growth → peak → decline dynamics
+2. **CSV export**: Write simulation results in column format (time, X, S) for plotting
 
 ### Near-term goals
 2. **Extended simulation test**: Run longer simulations (100+ steps) to verify numerical stability with light coupling and self-shading

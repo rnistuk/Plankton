@@ -4,11 +4,11 @@
 
 TEST(ReactorGeometry, ReactorGeometryCanBeConstructed) {
     // Arrange
-    const double depth = 1.0;
-    const double I0 = 1.0;
-    const double k = 1.0;
+    constexpr double depth = 1.0;
+    constexpr double I0 = 1.0;
+    constexpr double k = 1.0;
     // Act
-    auto sut = ReactorGeometry(depth, I0, k);
+    const auto sut = ReactorGeometry(depth, I0, k);
 
     // Assert
     EXPECT_DOUBLE_EQ(sut.depth, depth);
@@ -18,10 +18,10 @@ TEST(ReactorGeometry, ReactorGeometryCanBeConstructed) {
 
 TEST(ReactorGeometry, ReactorGeometryHasValidDepthParameter) {
     // Arrange
-    const double depth = 0.0;
-    const double negativeDepth = -10.0;
-    const double I0 = 1.0;
-    const double k = 1.0;
+    constexpr double depth = 0.0;
+    constexpr double negativeDepth = -10.0;
+    constexpr double I0 = 1.0;
+    constexpr double k = 1.0;
 
     // Act & Assert
     EXPECT_THROW(ReactorGeometry(depth, I0, k), std::invalid_argument);
@@ -30,10 +30,10 @@ TEST(ReactorGeometry, ReactorGeometryHasValidDepthParameter) {
 
 TEST(ReactorGeometry, ReactorGeometryHasValidIrradianceParameter) {
     // Arrange
-    const double depth = 1.0;
-    const double I0 = -1.0;
-    const double zeroI0 = 0.0;
-    const double k = 1.0;
+    constexpr double depth = 1.0;
+    constexpr double I0 = -1.0;
+    constexpr double zeroI0 = 0.0;
+    constexpr double k = 1.0;
 
     // Act & Assert
     EXPECT_THROW(ReactorGeometry(depth, I0, k), std::invalid_argument);
@@ -42,10 +42,10 @@ TEST(ReactorGeometry, ReactorGeometryHasValidIrradianceParameter) {
 
 TEST(ReactorGeometry, ReactorGeometryHasExtinctionCoefficientParameter) {
     // Arrange
-    const double depth = 1.0;
-    const double I0 = 1.0;
-    const double zero_k = 0.0;
-    const double negative_k = -1.0;
+    constexpr double depth = 1.0;
+    constexpr double I0 = 1.0;
+    constexpr double zero_k = 0.0;
+    constexpr double negative_k = -1.0;
 
     // Act & Assert
     EXPECT_THROW(ReactorGeometry(depth, I0, zero_k), std::invalid_argument);
@@ -54,15 +54,15 @@ TEST(ReactorGeometry, ReactorGeometryHasExtinctionCoefficientParameter) {
 
 TEST(ReactorGeometry, BeerLambertNoAttenuationAtSurface) {
     // Arrange
-    const double reactorDepth = 1.0;
-    const double I0 = 1.0;
-    const double k = 1.0;
+    constexpr double reactorDepth = 1.0;
+    constexpr double I0 = 1.0;
+    constexpr double k = 1.0;
     const ReactorGeometry sut(reactorDepth, I0, k);
-    const double X = 100.0; // ug C/Ml
-    const double z = 0.0;
+    constexpr double X = 100.0; // ug C/Ml
+    constexpr double z = 0.0;
 
     // Act
-    auto actual = beerLambert(z, sut, X);
+    const auto actual = beerLambert(z, sut, X);
 
     // Assert
     EXPECT_DOUBLE_EQ(actual, 1.0);
@@ -70,10 +70,10 @@ TEST(ReactorGeometry, BeerLambertNoAttenuationAtSurface) {
 
 TEST(ReactorGeometry, BeerLambertIrradianceDecreasesWithDepth) {
     // Arrange
-    const double maxReactorDepth = 10.0;
-    const double I0 = 1.0;
-    const double k = 1.0;
-    const double X = 1.0; // ug C/Ml
+    constexpr double maxReactorDepth = 10.0;
+    constexpr double I0 = 1.0;
+    constexpr double k = 1.0;
+    constexpr double X = 1.0; // ug C/Ml
     const ReactorGeometry sut(maxReactorDepth, I0, k);
     double z = 0.0;
     auto lastIrradiance = beerLambert(z, sut, X);
@@ -89,13 +89,13 @@ TEST(ReactorGeometry, BeerLambertIrradianceDecreasesWithDepth) {
 
 TEST(ReactorGeometry, BeerLambertIrradianceDecreasesWithIncreaseingBiomass) {
     // Arrange
-    const double reactorDepth = 1.0;
-    const double I0 = 1.0;
-    const double k = 1.0;
+    constexpr double reactorDepth = 1.0;
+    constexpr double I0 = 1.0;
+    constexpr double k = 1.0;
     const ReactorGeometry sut(reactorDepth, I0, k);
-    const double X1 = 50.0; // ug C/Ml
-    const double X2 = 100.0; // ug C/Ml
-    double z = reactorDepth / 2.0;
+    constexpr double X1 = 50.0; // ug C/Ml
+    constexpr double X2 = 100.0; // ug C/Ml
+    constexpr double z = reactorDepth / 2.0;
 
     // Act
     const auto irradiance1 = beerLambert(z, sut, X1);
@@ -107,11 +107,11 @@ TEST(ReactorGeometry, BeerLambertIrradianceDecreasesWithIncreaseingBiomass) {
 
 TEST(ReactorGeometry, BeerLambertDepthAveragedIrradianceFitsKnownAnalyticalValue) {
     // Arrange
-    const double reactorDepth = 1.0;
-    const double I0 = 100.0;
-    const double k = 1.0;
-    const double X = 1.0;
-    const double expected_I_ave = (100 / (1.0 * 1.0 * 1.0)) * (1 - exp(-1.0));
+    constexpr double reactorDepth = 1.0;
+    constexpr double I0 = 100.0;
+    constexpr double k = 1.0;
+    constexpr double X = 1.0;
+    const double expected_I_ave = 100 * (1 - exp(-1.0)) / (1.0 * 1.0 * 1.0);
     const auto sut = ReactorGeometry(reactorDepth, I0, k);
 
     // Act
@@ -123,11 +123,11 @@ TEST(ReactorGeometry, BeerLambertDepthAveragedIrradianceFitsKnownAnalyticalValue
 
 TEST(ReactorGeometry, BeerLambertDepthAveragedIrradianceDecreasesWithIncreasingBiomass) {
     // Arrange
-    const double reactorDepth = 1.0;
-    const double I0 = 100.0;
-    const double k = 1.0;
-    const double X0 = 1.0;
-    const double X1 = 100.0;
+    constexpr double reactorDepth = 1.0;
+    constexpr double I0 = 100.0;
+    constexpr double k = 1.0;
+    constexpr double X0 = 1.0;
+    constexpr double X1 = 100.0;
     const auto sut = ReactorGeometry(reactorDepth, I0, k);
 
     // Act
@@ -140,11 +140,11 @@ TEST(ReactorGeometry, BeerLambertDepthAveragedIrradianceDecreasesWithIncreasingB
 
 TEST(ReactorGeometry, BeerLambertDepthAveragedIrradianceDecreasesWithIncreasingDepth) {
     // Arrange
-    const double I0 = 100.0;
-    const double k = 1.0;
-    const double X = 1.0;
-    const double reactorDepth0 = 0.25;
-    const double reactorDepth1 = 0.75;
+    constexpr double I0 = 100.0;
+    constexpr double k = 1.0;
+    constexpr double X = 1.0;
+    constexpr double reactorDepth0 = 0.25;
+    constexpr double reactorDepth1 = 0.75;
     const auto sut0 = ReactorGeometry(reactorDepth0, I0, k);
     const auto sut1 = ReactorGeometry(reactorDepth1, I0, k);
 
@@ -158,10 +158,10 @@ TEST(ReactorGeometry, BeerLambertDepthAveragedIrradianceDecreasesWithIncreasingD
 
 TEST(ReactorGeometry, BeerLambertDepthAveragedIrradianceReturnsI0IfZeroBiomass) {
     // Arrange
-    const double reactorDepth = 2.0;
-    const double I0 = 100.0;
-    const double k = 1.0;
-    const double X = 0.0;
+    constexpr double reactorDepth = 2.0;
+    constexpr double I0 = 100.0;
+    constexpr double k = 1.0;
+    constexpr double X = 0.0;
     const auto sut = ReactorGeometry(reactorDepth, I0, k);
 
     // Act

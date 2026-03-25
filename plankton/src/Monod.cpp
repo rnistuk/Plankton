@@ -47,10 +47,10 @@ double lightLimitedGrowthRate(double S, double I_avg, const MonodParameters& par
 
 MonodState eulerStep(const MonodState& state, const MonodParameters& params, double I_avg) {
     MonodState newState = state;
-    double mu = lightLimitedGrowthRate(state.S, I_avg, params);
-    double dX = mu * state.X * params.dt;
+    const double mu = lightLimitedGrowthRate(state.S, I_avg, params);
+    const double dX = mu * state.X * params.dt;
     newState.X += dX;
-    double dS = dX / params.Yx_s;
+    const double dS = dX / params.Yx_s;
     newState.S -= dS;
     return newState;
 }

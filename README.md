@@ -96,6 +96,7 @@ The simulation outputs comma-delimited time series data. This plot was generated
 - CMake build system with Google Test
 
 ### 🔮 Planned Features
+- Mortality/decay term (`kd`) — enables growth → peak → decline dynamics
 - CSV export for time-series data
 - Refactor validation to use constructor pattern consistently
 - Runge-Kutta integration methods
