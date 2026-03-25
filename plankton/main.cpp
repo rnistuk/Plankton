@@ -27,12 +27,16 @@ Monod Parameters
     dt: 0.01-0.1 days (0.25-2.4 hours) for stability
  */
 int main() {
-
+    // TODO: the reactor geometry values are hard coded for now.
+    double depth = 0.05; // 5 cm
+    double I0 = 200.0; // moderate sunlight
+    double k = 0.2;
+    const auto geometry = ReactorGeometry(depth, I0, k);
     MonodState initial_state{50.0,5.0};
     MonodParameters params{1.0, 1.5, 6.6, 100.0, 0.01};
     int num_steps = 100;
 
-    auto result = simulate(num_steps, initial_state, params);
+    auto result = simulate(num_steps, initial_state, params, geometry);
 
     double t{0};
     std::cout << "\nSimulated Monod plankton growth" << std::endl;

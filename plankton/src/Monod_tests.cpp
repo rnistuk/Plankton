@@ -181,9 +181,14 @@ TEST(SimulateMultipleSteps, BiomassIncreasesSubstrateDecreases) {
     const MonodState state{1.0, 10.0};
     const MonodParameters params{KS, MU_MAX, 0.5, 100.0, 0.1 };
     const int num_steps = 10;
+    // TODO: the reactor geometry values are hard coded for now.
+    double depth = 0.05; // 5 cm
+    double I0 = 200.0; // moderate sunlight
+    double k = 0.2;
+    auto geometry = ReactorGeometry(depth, I0, k);
 
     // Act
-    const auto result = simulate(num_steps, state, params);
+    const auto result = simulate(num_steps, state, params, geometry);
 
 
     // Assert
@@ -197,9 +202,14 @@ TEST(SimulateMultipleSteps, SubstrateNeverNegative) {
     const MonodState state{50.0, 5.0};
     const MonodParameters params{KS, 1.5, 6.6, 100.0, 0.1 };
     const int num_steps = 1000;
+    // TODO: the reactor geometry values are hard coded for now.
+    double depth = 0.05; // 5 cm
+    double I0 = 200.0; // moderate sunlight
+    double k = 0.2;
+    auto geometry = ReactorGeometry(depth, I0, k);
 
     // Act
-    const auto result = simulate(num_steps, state, params);
+    const auto result = simulate(num_steps, state, params, geometry);
 
     // Assert
     for (const auto& s : result) {
@@ -211,10 +221,14 @@ TEST(SimulateMultipleSteps, BiomassRemainsConstantAfterSubstrateIsZero) {
     // Arrange
     const MonodState state{50.0, 5.0};
     const MonodParameters params{KS, 1.5, 6.6, 100.0,  0.1 };
-    const int num_steps = 1000;
+    const int num_steps = 1000;  // TODO: the reactor geometry values are hard coded for now.
+    double depth = 0.05; // 5 cm
+    double I0 = 200.0; // moderate sunlight
+    double k = 0.2;
+    auto geometry = ReactorGeometry(depth, I0, k);
 
     //Act
-    const auto results = simulate(num_steps, state, params);
+    const auto results = simulate(num_steps, state, params, geometry);
 
     // Assert
     auto it = std::find_if(results.begin(), results.end(), [](const auto& r) {
@@ -231,58 +245,96 @@ TEST(SimulateMultipleSteps, BiomassRemainsConstantAfterSubstrateIsZero) {
     }
 }
 
+TEST(SimulateMultipleSteps, DeeperReactorReducesGrowth) {
+    const MonodState state{1.0, 10.0};
+    const MonodParameters params{KS, MU_MAX, 0.5, 100.0, 0.1};
+    const int num_steps = 10;
+
+    const ReactorGeometry shallow{0.01, 200.0, 0.2};  // 1 cm
+    const ReactorGeometry deep{0.20, 200.0, 0.2};     // 20 cm
+
+    const auto shallow_result = simulate(num_steps, state, params, shallow);
+    const auto deep_result    = simulate(num_steps, state, params, deep);
+
+    EXPECT_GT(shallow_result.back().X, deep_result.back().X);
+}
+
 TEST(ParameterValidation, NegativeKsThrowsException) {
     // Arrange
     const MonodState state{1.0, 1.0};
     const MonodParameters params{-1.0, 1.5, 6.6, 100.0, 0.1};  // Negative Ks
+    double depth = 0.05; // 5 cm
+    double I0 = 200.0; // moderate sunlight
+    double k = 0.2;
+    const auto geometry = ReactorGeometry(depth, I0, k);
 
     // Act & Assert
-    EXPECT_THROW(simulate(10, state, params), std::invalid_argument);
+    EXPECT_THROW(simulate(10, state, params, geometry), std::invalid_argument);
 }
 
 TEST(ParameterValidation, Negativemu_maxThrowsException) {
     // Arrange
     const MonodState state{1.0, 1.0};
     const MonodParameters params{1.0, -1.5, 6.6, 100.0, 0.1};
+    double depth = 0.05; // 5 cm
+    double I0 = 200.0; // moderate sunlight
+    double k = 0.2;
+    const auto geometry = ReactorGeometry(depth, I0, k);
 
     // Act & Assert
-    EXPECT_THROW(simulate(10, state, params), std::invalid_argument);
+    EXPECT_THROW(simulate(10, state, params, geometry), std::invalid_argument);
 }
 
 TEST(ParameterValidation, NegativeYx_sThrowsException) {
     // Arrange
     const MonodState state{1.0, 1.0};
     const MonodParameters params{1.0, 1.5, -6.6, 100.0, 0.1};
+    double depth = 0.05; // 5 cm
+    double I0 = 200.0; // moderate sunlight
+    double k = 0.2;
+    const auto geometry = ReactorGeometry(depth, I0, k);
 
     // Act & Assert
-    EXPECT_THROW(simulate(10, state, params), std::invalid_argument);
+    EXPECT_THROW(simulate(10, state, params, geometry), std::invalid_argument);
 }
 
 TEST(ParameterValidation, NegativeTimeStepThrowsException) {
     // Arrange
     const MonodState state{1.0, 1.0};
     const MonodParameters params{1.0, 1.5, 6.6, 100.0, -0.1};
+    double depth = 0.05; // 5 cm
+    double I0 = 200.0; // moderate sunlight
+    double k = 0.2;
+    const auto geometry = ReactorGeometry(depth, I0, k);
 
     // Act & Assert
-    EXPECT_THROW(simulate(10, state, params), std::invalid_argument);
+    EXPECT_THROW(simulate(10, state, params, geometry), std::invalid_argument);
 }
 
 TEST(StateValidation, NegativeBiomassThrowsException) {
     // Arrange
     const MonodState state{-1.0, 5.0};  // Negative biomass
     const MonodParameters params{KS, 1.5, 6.6, 100.0, 0.1};
+    double depth = 0.05; // 5 cm
+    double I0 = 200.0; // moderate sunlight
+    double k = 0.2;
+    const auto geometry = ReactorGeometry(depth, I0, k);
 
     // Act & Assert
-    EXPECT_THROW(simulate(10, state, params), std::invalid_argument);
+    EXPECT_THROW(simulate(10, state, params, geometry), std::invalid_argument);
 }
 
 TEST(StateValidation, NegativeSubstrateThrowsException) {
     // Arrange
     const MonodState state{50.0, -5.0};  // Negative substrate
     const MonodParameters params{KS, 1.5, 6.6, 100.0, 0.1};
+    double depth = 0.05; // 5 cm
+    double I0 = 200.0; // moderate sunlight
+    double k = 0.2;
+    const auto geometry = ReactorGeometry(depth, I0, k);
 
     // Act & Assert
-    EXPECT_THROW(simulate(10, state, params), std::invalid_argument);
+    EXPECT_THROW(simulate(10, state, params, geometry), std::invalid_argument);
 }
 
 TEST(ParameterValidation, NegativeKiThrowsException) {

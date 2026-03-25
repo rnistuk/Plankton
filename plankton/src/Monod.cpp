@@ -55,16 +55,13 @@ MonodState eulerStep(const MonodState& state, const MonodParameters& params, dou
     return newState;
 }
 
-std::vector<MonodState> simulate(int num_steps, const MonodState& state, const MonodParameters& params) {
+std::vector<MonodState> simulate(int num_steps
+    , const MonodState& state
+    , const MonodParameters& params
+    , const ReactorGeometry& geometry) {
     validateParameters(params);
     validateState(state);
 
-    // TODO: the reactor geometry values are hard coded for now.
-    double depth = 0.05; // 5 cm
-    double I0 = 200.0; // moderate sunlight
-    double k = 0.2;
-
-    auto geometry = ReactorGeometry(depth, I0, k);
     std::vector<MonodState> result;
     result.reserve(num_steps + 1);
     result.push_back(state);

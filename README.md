@@ -90,11 +90,12 @@ The simulation outputs comma-delimited time series data. This plot was generated
 - ReactorGeometry structure with constructor validation
 - Beer-Lambert point irradiance model: I(z) = I₀ × exp(-k × X × z)
 - Depth-averaged irradiance model for well-mixed reactor
+- Light-limited growth coupling via Liebig's Law: µ = µ_max × min(S/(Ks+S), I_avg/(Ki+I_avg))
+- ReactorGeometry passed into `simulate()` — fully configurable, no hardcoded values
 - Demo program outputting growth simulation data
 - CMake build system with Google Test
 
 ### 🔮 Planned Features
-- Light-limited growth coupling using Liebig's Law
 - CSV export for time-series data
 - Refactor validation to use constructor pattern consistently
 - Runge-Kutta integration methods

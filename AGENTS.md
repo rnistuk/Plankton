@@ -43,7 +43,7 @@ Parameters to expose: max growth rate, half-saturation constant, light extinctio
   - Comprehensive unit tests covering edge cases (zero substrate, half-saturation, high substrate, monotonicity)
 - **Data structures**
   - `MonodState` struct: tracks biomass (X) and substrate (S) concentrations
-  - `MonodParameters` struct: holds model constants (K_s, µ_max, Y_x/s, dt)
+  - `MonodParameters` struct: holds model constants (K_s, µ_max, Y_x/s, Ki, dt)
 - **Euler integration** (`eulerStep`)
   - Single time-step integration using Euler's method
   - Exponential biomass growth (dX/dt = µ × X)
@@ -52,7 +52,7 @@ Parameters to expose: max growth rate, half-saturation constant, light extinctio
   - Tests cover: zero substrate, positive growth, substrate depletion, mass conservation
 - **Multi-step simulation** (`simulate`)
   - Runs multiple integration steps and returns time series
-  - Signature: `simulate(num_steps, initial_state, params)` returns `vector<MonodState>`
+  - Signature: `simulate(num_steps, initial_state, params, geometry)` returns `vector<MonodState>`
   - Returns initial state + num_steps (e.g., 10 steps = 11 states total)
   - Test verifies biomass increases and substrate decreases over time
   - Clamps substrate to zero to prevent negative values (numerical safeguard)
@@ -76,27 +76,28 @@ Parameters to expose: max growth rate, half-saturation constant, light extinctio
   - `depthAveragedIrradiance(geometry, X)`: depth-integrated average over full reactor depth
   - Handles X = 0 edge case (returns I₀ — no biomass, no attenuation)
   - Tests cover: surface boundary condition, monotonicity with depth and biomass, analytical value, zero biomass
+- **Light-limited growth** (`lightLimitedGrowthRate`)
+  - Implements Liebig's Law: µ = µ_max × min(S/(Ks+S), I_avg/(Ki+I_avg))
+  - `Ki` (light half-saturation constant) added to `MonodParameters` with constructor validation
+  - `eulerStep` updated to accept `I_avg`; defaults to `∞` for backward compatibility
+  - Tests cover: zero light stops growth, light at half-saturation, substrate-limiting case
+- **Configurable reactor geometry in `simulate()`**
+  - `ReactorGeometry` is now passed into `simulate()` — no hardcoded values
+  - Test verifies deeper reactor produces less growth than shallow reactor
 - **Demo program** (`main.cpp`)
   - Runs 100-step simulation with realistic phytoplankton parameters
   - Outputs time series data: t, X (biomass), S (nutrient)
   - Includes documented parameter ranges for algae cultures
 - **CMake build system** with Google Test integration
 
-### 🚧 In progress
-- **Light-limited growth**: Couple `depthAveragedIrradiance` to Monod growth rate via Liebig's Law
-
 ### ❌ Not started
+- **CSV export**: Write simulation results for plotting
 - **Separate N and P tracking**: Break out nitrogen and phosphorus as separate state variables instead of generic substrate S
   - Update `MonodState` to include N and P fields
   - Update `MonodParameters` to include separate Ks_N, Ks_P, Yx_N, Yx_P
   - Implement dual nutrient limitation (Liebig's law of the minimum)
   - Update main.cpp output to show t, X, N, P
   - Update tests for new structure
-- **CSV export**: Write simulation results for plotting
-- **Beer-Lambert light attenuation**: I(z) = I₀ × exp(-k × X × z)
-- **Light-limited growth**: Couple light intensity to Monod growth rate
-  - Initial implementation: Liebig's Law (minimum of limiting factors)
-  - Future enhancement: Configurable limitation models (multiplicative, dual Monod, Liebig)
 - **Advanced integration methods**: Runge-Kutta 2nd or 4th order
 - **Refactor validation to use constructor pattern**: Move validation from external functions to constructors
   - Add constructors to MonodParameters and MonodState with validation
@@ -129,15 +130,16 @@ Parameters to expose: max growth rate, half-saturation constant, light extinctio
 ## Next steps
 
 ### Immediate priorities
-1. **Couple light to growth**: Add `Ki` to `MonodParameters`, modify `eulerStep` to accept `depthAveragedIrradiance` and apply Liebig's Law: µ = µ_max × min(S/(Ks+S), I_avg/(Ki+I_avg))
+1. **CSV export**: Write simulation results in column format (time, X, S) for plotting
 
 ### Near-term goals
-2. **CSV export**: Write simulation results in column format (time, X, S) for plotting
-3. **Extended simulation test**: Run longer simulations (100+ steps) to verify numerical stability with light coupling
+2. **Extended simulation test**: Run longer simulations (100+ steps) to verify numerical stability with light coupling and self-shading
+3. **Refactor validation to use constructor pattern**: Move `validateParameters` and `validateState` into constructors, consistent with `ReactorGeometry`
 
 ### Future enhancements
 - Runge-Kutta integration (RK2 or RK4) for improved accuracy
 - Adaptive time stepping
+- Separate N and P tracking with dual nutrient limitation
 - 1D spatial light profile (depth-dependent growth)
 - Performance benchmarking
 - Parallelization for parameter sweeps
