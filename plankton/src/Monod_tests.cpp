@@ -1,7 +1,6 @@
 #include "Monod.h"
 
 #include <algorithm>
-#include <chrono>
 #include <gtest/gtest.h>
 
 constexpr double KS = 1.0;     // Half-saturation constant (or affinity constant)
@@ -65,10 +64,10 @@ TEST(Monod, GrowthIncreasesWithSubstrate) {
     EXPECT_LE(Monod(S2, KS, MU_MAX), Monod(S3, KS, MU_MAX));
 }
 
-TEST(EulerMonad, ZeroSubstrateBiomassStaysConstant) {
+TEST(EulerMonod, ZeroSubstrateBiomassStaysConstant) {
     // Arrange
     MonodState state{1.0, 0.0};
-    const MonodParameters params{KS, MU_MAX, 0.5, 0.01 };
+    const MonodParameters params{KS, MU_MAX, 0.5, 100.0, 0.01 };
 
     // Act
     state = eulerStep(state, params);
@@ -77,12 +76,12 @@ TEST(EulerMonad, ZeroSubstrateBiomassStaysConstant) {
     EXPECT_DOUBLE_EQ(state.X, 1.0);
 }
 
-TEST(EulerMonad, PositiveSubstrateIncreasesBiomass) {
+TEST(EulerMonod, PositiveSubstrateIncreasesBiomass) {
     // Arrange
     const MonodState state{1.0, 5.0};
     MonodState newState{1.0, 0.0};
 
-    const MonodParameters params{KS, MU_MAX, 0.5, 0.01 };
+    const MonodParameters params{KS, MU_MAX, 0.5, 100, 0.01 };
 
     // Act
     newState = eulerStep(state, params);
@@ -91,12 +90,12 @@ TEST(EulerMonad, PositiveSubstrateIncreasesBiomass) {
     EXPECT_GT(newState.X, state.X);
 }
 
-TEST(EulerMonad, PositiveSubstrateDecreasesSubstrate) {
+TEST(EulerMonod, PositiveSubstrateDecreasesSubstrate) {
     // Arrange
     const MonodState state{1.0, 5.0};
     //MonodState newState{1.0, 0.0};
 
-    const MonodParameters params{KS, MU_MAX, 0.5, 0.01 };
+    const MonodParameters params{KS, MU_MAX, 0.5, 100, 0.01 };
 
     // Act
     const auto newState = eulerStep(state, params);
@@ -105,10 +104,69 @@ TEST(EulerMonad, PositiveSubstrateDecreasesSubstrate) {
     EXPECT_LT(newState.S, state.S);
 }
 
+TEST(EulerMonod, HighLightHighSubstrateGivesFullGrowth) {
+    // Arrange
+    const MonodState state{1.0, 100.0};   // high substrate
+    const double Ki = 50.0;
+    const MonodParameters params{KS, MU_MAX, 0.5, Ki, 0.01};
+    const double I_avg = 1000.0;          // >> Ki, light is non-limiting
+
+    // Act
+    const auto newState = eulerStep(state, params, I_avg);
+
+    // Assert
+    EXPECT_GT(newState.X, state.X);
+}
+
+TEST(LightLimitedGrowthRate, ZeroLightReturnsZeroGrowthRate) {
+    // Arrange
+    const double S = 5.0;
+    const double Ki = 50.0;
+    const MonodParameters params{KS, MU_MAX, 0.5, Ki, 0.01};
+    const double I_avg = 0.0;
+
+    // Act
+    const auto mu = lightLimitedGrowthRate(S, I_avg, params);
+
+    // Assert
+    EXPECT_DOUBLE_EQ(mu, 0.0);
+
+}
+
+TEST(LightLimitedGrowthRate, LightAtHalfSaturationGivesHalfMaxGrowth) {
+    // Arrange
+    const double S = KS;
+    const double Ki = 50.0;
+    const MonodParameters params{KS, MU_MAX, 0.5, Ki, 0.01};
+    const double I_avg = Ki;
+
+    // Act
+    const auto mu = lightLimitedGrowthRate(S, I_avg, params);
+
+    // Assert
+    EXPECT_NEAR(mu, MU_MAX/2.0, 0.03);
+}
+
+TEST(LightLimitedGrowthRate, SubstrateLimitingOverridesLight) {
+    // Arrange
+    const double S = 19.0; // relatively low value for substrate.
+    const double Ki = 50.0;
+    const MonodParameters params{KS, MU_MAX, 0.5, Ki, 0.01};
+    const double I_avg = 1000.0; // A really high light intensity
+    const auto expected_mu = Monod(S, KS, MU_MAX);
+
+    // Act
+    const auto mu = lightLimitedGrowthRate(S, I_avg, params);
+
+    // Assert "when light is non-limiting, the light-coupled rate equals the
+    // substrate-only Monod rate".
+    EXPECT_NEAR(expected_mu, mu, 0.03);
+}
+
 TEST(Stoichiometry, SubstrateConsumedEqualsBiomassProduced) {
     // Arrange
     const MonodState state{ 1.01, 5.0 };
-    const MonodParameters params{ KS, MU_MAX, 0.5, 0.01 };
+    const MonodParameters params{ KS, MU_MAX, 0.5, 100,0.01 };
 
     // Act
     const auto newState = eulerStep(state, params);
@@ -121,7 +179,7 @@ TEST(Stoichiometry, SubstrateConsumedEqualsBiomassProduced) {
 TEST(SimulateMultipleSteps, BiomassIncreasesSubstrateDecreases) {
     // Arrange
     const MonodState state{1.0, 10.0};
-    const MonodParameters params{KS, MU_MAX, 0.5, 0.1 };
+    const MonodParameters params{KS, MU_MAX, 0.5, 100.0, 0.1 };
     const int num_steps = 10;
 
     // Act
@@ -137,7 +195,7 @@ TEST(SimulateMultipleSteps, BiomassIncreasesSubstrateDecreases) {
 TEST(SimulateMultipleSteps, SubstrateNeverNegative) {
     // Arrange
     const MonodState state{50.0, 5.0};
-    const MonodParameters params{KS, 1.5, 6.6, 0.1 };
+    const MonodParameters params{KS, 1.5, 6.6, 100.0, 0.1 };
     const int num_steps = 1000;
 
     // Act
@@ -152,7 +210,7 @@ TEST(SimulateMultipleSteps, SubstrateNeverNegative) {
 TEST(SimulateMultipleSteps, BiomassRemainsConstantAfterSubstrateIsZero) {
     // Arrange
     const MonodState state{50.0, 5.0};
-    const MonodParameters params{KS, 1.5, 6.6, 0.1 };
+    const MonodParameters params{KS, 1.5, 6.6, 100.0,  0.1 };
     const int num_steps = 1000;
 
     //Act
@@ -176,7 +234,7 @@ TEST(SimulateMultipleSteps, BiomassRemainsConstantAfterSubstrateIsZero) {
 TEST(ParameterValidation, NegativeKsThrowsException) {
     // Arrange
     const MonodState state{1.0, 1.0};
-    const MonodParameters params{-1.0, 1.5, 6.6, 0.1};  // Negative Ks
+    const MonodParameters params{-1.0, 1.5, 6.6, 100.0, 0.1};  // Negative Ks
 
     // Act & Assert
     EXPECT_THROW(simulate(10, state, params), std::invalid_argument);
@@ -185,7 +243,7 @@ TEST(ParameterValidation, NegativeKsThrowsException) {
 TEST(ParameterValidation, Negativemu_maxThrowsException) {
     // Arrange
     const MonodState state{1.0, 1.0};
-    const MonodParameters params{1.0, -1.5, 6.6, 0.1};
+    const MonodParameters params{1.0, -1.5, 6.6, 100.0, 0.1};
 
     // Act & Assert
     EXPECT_THROW(simulate(10, state, params), std::invalid_argument);
@@ -194,7 +252,7 @@ TEST(ParameterValidation, Negativemu_maxThrowsException) {
 TEST(ParameterValidation, NegativeYx_sThrowsException) {
     // Arrange
     const MonodState state{1.0, 1.0};
-    const MonodParameters params{1.0, 1.5, -6.6, 0.1};
+    const MonodParameters params{1.0, 1.5, -6.6, 100.0, 0.1};
 
     // Act & Assert
     EXPECT_THROW(simulate(10, state, params), std::invalid_argument);
@@ -203,7 +261,7 @@ TEST(ParameterValidation, NegativeYx_sThrowsException) {
 TEST(ParameterValidation, NegativeTimeStepThrowsException) {
     // Arrange
     const MonodState state{1.0, 1.0};
-    const MonodParameters params{1.0, 1.5, 6.6, -0.1};
+    const MonodParameters params{1.0, 1.5, 6.6, 100.0, -0.1};
 
     // Act & Assert
     EXPECT_THROW(simulate(10, state, params), std::invalid_argument);
@@ -212,7 +270,7 @@ TEST(ParameterValidation, NegativeTimeStepThrowsException) {
 TEST(StateValidation, NegativeBiomassThrowsException) {
     // Arrange
     const MonodState state{-1.0, 5.0};  // Negative biomass
-    const MonodParameters params{KS, 1.5, 6.6, 0.1};
+    const MonodParameters params{KS, 1.5, 6.6, 100.0, 0.1};
 
     // Act & Assert
     EXPECT_THROW(simulate(10, state, params), std::invalid_argument);
@@ -221,8 +279,24 @@ TEST(StateValidation, NegativeBiomassThrowsException) {
 TEST(StateValidation, NegativeSubstrateThrowsException) {
     // Arrange
     const MonodState state{50.0, -5.0};  // Negative substrate
-    const MonodParameters params{KS, 1.5, 6.6, 0.1};
+    const MonodParameters params{KS, 1.5, 6.6, 100.0, 0.1};
 
     // Act & Assert
     EXPECT_THROW(simulate(10, state, params), std::invalid_argument);
+}
+
+TEST(ParameterValidation, NegativeKiThrowsException) {
+    // Arrange
+    const MonodState state{1.0, 1.0};
+
+    // Act & Assert
+    EXPECT_THROW( MonodParameters(1.0, 1.5, 6.6, -0.1, 0.1), std::invalid_argument);
+}
+
+TEST(ParameterValidation, ZeroKiThrowsException) {
+    // Arrange
+    const MonodState state{1.0, 1.0};
+
+    // Act & Assert
+    EXPECT_THROW( MonodParameters(1.0, 1.5, 6.6, 0.0, 0.1), std::invalid_argument);
 }

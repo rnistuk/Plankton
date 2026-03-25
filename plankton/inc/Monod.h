@@ -2,10 +2,13 @@
 #include "MonodParameters.h"
 #include "MonodState.h"
 
+#include <limits>
 #include <vector>
 
-double Monod(double S, double Ks, double mu_max);
+double Monod(double S, double Ks, double mu_max); // To be replaced by lightLimitedGrowthRate
 
-MonodState eulerStep(const MonodState& state, const MonodParameters& params);
+double lightLimitedGrowthRate(double S, double I_avg, const MonodParameters& params);
+
+MonodState eulerStep(const MonodState& state, const MonodParameters& params, double I_avg = std::numeric_limits<double>::infinity());
 
 std::vector<MonodState> simulate(int num_steps, const MonodState& state, const MonodParameters& params);

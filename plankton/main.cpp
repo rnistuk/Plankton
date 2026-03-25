@@ -16,6 +16,11 @@ Monod Parameters
     Ks (half-saturation constant):
         Nitrogen: 0.1-5 mg N/L (typical: 1-2)
         Phosphorus: 0.01-0.5 mg P/L (typical: 0.05-0.1)
+    Ki (half-saturation constant for light)
+        200 µmol photons m⁻² s⁻¹, with 50–100 being typical for most green
+        microalgae.
+        Fast-growing species like Chlorella tend toward the lower end (~20–50);
+        slower or shade-adapted species can be higher.
     Yx/s (yield coefficient):
         For nitrogen: ~5-10 mg C / mg N (from Redfield 106:16 ≈ 6.6)
         For phosphorus: ~50-100 mg C / mg P (from Redfield 106:1 = 106)
@@ -24,7 +29,7 @@ Monod Parameters
 int main() {
 
     MonodState initial_state{50.0,5.0};
-    MonodParameters params{1.0, 1.5, 6.6, 0.01};
+    MonodParameters params{1.0, 1.5, 6.6, 100.0, 0.01};
     int num_steps = 100;
 
     auto result = simulate(num_steps, initial_state, params);

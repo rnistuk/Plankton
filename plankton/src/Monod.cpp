@@ -2,6 +2,8 @@
 
 #include <stdexcept>
 
+#include "BeerLambert.h"
+
 // Private functions
 void validateParameters(const MonodParameters& params) {
     if (params.Ks <= 0) {
@@ -36,9 +38,16 @@ double Monod(double S, double Ks, double mu_max) {
     return mu_max * S / (Ks + S);
 }
 
-MonodState eulerStep(const MonodState& state, const MonodParameters& params) {
+double lightLimitedGrowthRate(double S, double I_avg, const MonodParameters& params) {
+    return params.mu_max * std::min(
+        S / (params.Ks + S),
+        I_avg / (params.Ki + I_avg)
+    );
+}
+
+MonodState eulerStep(const MonodState& state, const MonodParameters& params, double I_avg) {
     MonodState newState = state;
-    double mu = Monod(state.S, params.Ks, params.mu_max);
+    double mu = lightLimitedGrowthRate(state.S, I_avg, params);
     double dX = mu * state.X * params.dt;
     newState.X += dX;
     double dS = dX / params.Yx_s;
@@ -50,11 +59,18 @@ std::vector<MonodState> simulate(int num_steps, const MonodState& state, const M
     validateParameters(params);
     validateState(state);
 
+    // TODO: the reactor geometry values are hard coded for now.
+    double depth = 0.05; // 5 cm
+    double I0 = 200.0; // moderate sunlight
+    double k = 0.2;
+
+    auto geometry = ReactorGeometry(depth, I0, k);
     std::vector<MonodState> result;
     result.reserve(num_steps + 1);
     result.push_back(state);
     for (int i = 0; i < num_steps; ++i) {
-        auto next = eulerStep(result.back(), params);
+        const auto I_avg = depthAveragedIrradiance(geometry, result.back().X);
+        auto next = eulerStep(result.back(), params, I_avg);
         next.S = std::max(next.S, 0.0); // The substrate concentration cannot be negative in a physical system, so we fake that here.
         result.push_back(next);
     }
