@@ -75,7 +75,7 @@ The simulation outputs comma-delimited time series data. This plot was generated
 
 ![Light-Limited Growth Simulation](Resources/DataPlotMar24.svg)
 
-*100-step simulation with light-limited growth coupling via Liebig's Law, showing the effect of Beer-Lambert light attenuation on biomass dynamics.*
+*100-step simulation over 1 day showing biomass (X) increase and substrate (S) depletion with light-limited growth. Growth rate is governed by Liebig's Law — the minimum of substrate and depth-averaged irradiance (Beer-Lambert) limitation.*
 
 ## Current Implementation Status
 
