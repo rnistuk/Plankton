@@ -73,6 +73,10 @@ The simulation outputs comma-delimited time series data. This plot was generated
 
 *100-step simulation showing biomass increase (blue) and substrate depletion (red) over 1 day with realistic phytoplankton parameters.*
 
+![Light-Limited Growth Simulation](Resources/DataPlotMar24.svg)
+
+*100-step simulation with light-limited growth coupling via Liebig's Law, showing the effect of Beer-Lambert light attenuation on biomass dynamics.*
+
 ## Current Implementation Status
 
 ### ✅ Completed
