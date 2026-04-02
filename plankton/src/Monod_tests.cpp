@@ -205,7 +205,7 @@ TEST(SimulateMultipleSteps, SubstrateNeverNegative) {
     const auto geometry = ReactorGeometry(depth, I0, k);
 
     // Act & Assert
-    for (const auto&[X, S] : simulate(num_steps, state, params, geometry)) {
+    for (const auto&[X, S, I] : simulate(num_steps, state, params, geometry)) {
         ASSERT_GE(S, 0.0) << "Substrate should never be negative";
     }
 }
@@ -250,6 +250,24 @@ TEST(SimulateMultipleSteps, DeeperReactorReducesGrowth) {
     const auto deep_result    = simulate(num_steps, state, params, deep);
 
     EXPECT_GT(shallow_result.back().X, deep_result.back().X);
+}
+
+TEST(SimulateMultipleSteps, ResultContainsIAvg) {
+    // Arrange
+    constexpr MonodState state{50.0, 5.0};
+    const MonodParameters params{KS, 1.5, 6.6, 100.0, 0.1 };
+    constexpr int num_steps = 1000;
+    constexpr double depth = 0.05; // 5 cm
+    constexpr double I0 = 200.0; // moderate sunlight
+    constexpr double k = 0.2;
+    const auto geometry = ReactorGeometry(depth, I0, k);
+
+    // Act
+    auto results = simulate(num_steps, state, params, geometry);
+
+    // Assert
+    auto [X, S, Iavg] = results.front();
+    EXPECT_NEAR(Iavg, 157.4, 0.1);
 }
 
 TEST(ParameterValidation, NegativeKsThrowsException) {

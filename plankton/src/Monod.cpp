@@ -55,21 +55,21 @@ MonodState eulerStep(const MonodState& state, const MonodParameters& params, dou
     return newState;
 }
 
-std::vector<MonodState> simulate(int num_steps
-    , const MonodState& state
-    , const MonodParameters& params
-    , const ReactorGeometry& geometry) {
+std::vector<SimulationRecord> simulate(int num_steps
+                                       , const MonodState &state
+                                       , const MonodParameters &params
+                                       , const ReactorGeometry &geometry) {
     validateParameters(params);
     validateState(state);
+    SimulationRecord currentState(state.X, state.S, depthAveragedIrradiance(geometry, state.X));
+    std::vector<SimulationRecord> records;
+    records.reserve(num_steps + 1);
+    records.push_back(currentState);
 
-    std::vector<MonodState> result;
-    result.reserve(num_steps + 1);
-    result.push_back(state);
     for (int i = 0; i < num_steps; ++i) {
-        const auto I_avg = depthAveragedIrradiance(geometry, result.back().X);
-        auto next = eulerStep(result.back(), params, I_avg);
-        next.S = std::max(next.S, 0.0); // The substrate concentration cannot be negative in a physical system, so we fake that here.
-        result.push_back(next);
+        auto& back = records.back();
+        MonodState monodState = eulerStep(MonodState(back.X, back.S), params, back.I_avg);
+        records.push_back(SimulationRecord(monodState.X, std::max(monodState.S, 0.0), depthAveragedIrradiance(geometry, monodState.X)));
     }
-    return result;
+    return records;
 }

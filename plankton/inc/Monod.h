@@ -2,6 +2,7 @@
 #include "MonodParameters.h"
 #include "MonodState.h"
 #include "ReactorGeometry.h"
+#include "SimulationRecord.h"
 
 #include <limits>
 #include <vector>
@@ -12,6 +13,7 @@ double lightLimitedGrowthRate(double S, double I_avg, const MonodParameters& par
 
 MonodState eulerStep(const MonodState& state, const MonodParameters& params, double I_avg = std::numeric_limits<double>::infinity());
 
-std::vector<MonodState> simulate(int num_steps, const MonodState& state
-    , const MonodParameters& params
-    , const ReactorGeometry& geometry);
+std::vector<SimulationRecord> simulate(
+    int num_steps, const MonodState &state
+    , const MonodParameters &params
+    , const ReactorGeometry &geometry);

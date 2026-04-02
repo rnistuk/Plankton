@@ -41,7 +41,7 @@ int main() {
     double t{0};
     std::cout << "\nSimulated Monod plankton growth" << std::endl;
     std::cout << "t(days), X(biomass,μg C/mL), S(nutrient, mg N/L or mg P/L)" << std::endl;
-    for (const auto&[X, S] : result) {
+    for (const auto&[X, S, I] : result) {
         std::cout << std::fixed << std::setprecision(2) << t << ", "
         << std::setprecision(4) << X << ", " << S << std::endl;
         t += params.dt;
