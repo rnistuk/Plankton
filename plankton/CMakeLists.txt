@@ -10,7 +10,10 @@ add_executable(Plankton main.cpp
         inc/MonodParameters.h
         inc/SimulationParameters.h
         inc/BeerLambert.h
-        src/beerLambert.cpp)
+        src/beerLambert.cpp
+        src/CsvExport.cpp
+        inc/CsvExport.h
+        inc/SimulationRecord.h)
 
 add_executable(PlanktonTests
         test_main.cpp
@@ -25,6 +28,10 @@ add_executable(PlanktonTests
         inc/SimulationParameters.h
         inc/BeerLambert.h
         src/beerLambert.cpp
+        src/CsvExport.cpp
+        inc/CsvExport.h
+        inc/SimulationRecord.h
+        src/CsvExport_tests.cpp
 )
 
 include_directories(inc)
@@ -32,6 +39,7 @@ include_directories(inc)
 target_link_libraries(PlanktonTests
         PRIVATE
         GTest::gtest_main
+        GTest::gmock
 )
 
 include(GoogleTest)
