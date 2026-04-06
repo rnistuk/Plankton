@@ -10,7 +10,7 @@ struct ReactorGeometry {
 
     ReactorGeometry(double depth, double I0, double k): depth(depth), I0(I0), k(k) {
         validateReactorGeometry();
-    };
+    }
 
 private:
     void validateReactorGeometry() const {
@@ -25,7 +25,5 @@ private:
         if (k <= 0) {
             throw std::invalid_argument("k must be greater than zero");
         }
-    };
-
-
+    }
 };

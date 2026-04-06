@@ -42,8 +42,10 @@ Parameters to expose: max growth rate, half-saturation constant, light extinctio
   - Returns specific growth rate µ as a function of substrate concentration
   - Comprehensive unit tests covering edge cases (zero substrate, half-saturation, high substrate, monotonicity)
 - **Data structures**
-  - `MonodState` struct: tracks biomass (X) and substrate (S) concentrations
-  - `MonodParameters` struct: holds model constants (K_s, µ_max, Y_x/s, Ki, dt)
+  - `MonodState` struct: tracks biomass (X) and substrate (S) concentrations — used as integration state
+  - `MonodParameters` struct: holds model constants (K_s, µ_max, Y_x/s, Ki, dt); constructor validates `Ki > 0` at construction (throws `std::invalid_argument`)
+  - `SimulationRecord` struct: output record per step — X, S, and depth-averaged I_avg
+  - `SimulationParameters` struct: aggregates `MonodParameters` and `ReactorGeometry` into a single configuration type (defined, not yet used in simulation API)
 - **Euler integration** (`eulerStep`)
   - Single time-step integration using Euler's method
   - Exponential biomass growth (dX/dt = µ × X)
@@ -52,8 +54,9 @@ Parameters to expose: max growth rate, half-saturation constant, light extinctio
   - Tests cover: zero substrate, positive growth, substrate depletion, mass conservation
 - **Multi-step simulation** (`simulate`)
   - Runs multiple integration steps and returns time series
-  - Signature: `simulate(num_steps, initial_state, params, geometry)` returns `vector<MonodState>`
-  - Returns initial state + num_steps (e.g., 10 steps = 11 states total)
+  - Signature: `simulate(num_steps, initial_state, params, geometry)` returns `vector<SimulationRecord>`
+  - Returns initial state + num_steps (e.g., 10 steps = 11 records total)
+  - Each record captures X, S, and depth-averaged I_avg at that step
   - Test verifies biomass increases and substrate decreases over time
   - Clamps substrate to zero to prevent negative values (numerical safeguard)
   - Test verifies substrate never goes negative throughout simulation
@@ -84,9 +87,13 @@ Parameters to expose: max growth rate, half-saturation constant, light extinctio
 - **Configurable reactor geometry in `simulate()`**
   - `ReactorGeometry` is now passed into `simulate()` — no hardcoded values
   - Test verifies deeper reactor produces less growth than shallow reactor
+- **CSV export** (`writeCsv`)
+  - Writes header and fixed-precision time series to any `ostream`
+  - Format: t (2dp), X, S, I_avg (4dp each), comma-space separated
+  - `writeRecord` helper in anonymous namespace
 - **Demo program** (`main.cpp`)
-  - Runs 100-step simulation with realistic phytoplankton parameters
-  - Outputs time series data: t, X (biomass), S (nutrient)
+  - Runs 1000-step simulation with realistic phytoplankton parameters
+  - Outputs CSV to stdout via `writeCsv`
   - Includes documented parameter ranges for algae cultures
 - **CMake build system** with Google Test integration
 
@@ -96,7 +103,7 @@ Parameters to expose: max growth rate, half-saturation constant, light extinctio
   - Typical values: 0.05–0.3 day⁻¹ for phytoplankton
   - Produces growth → peak → decline dynamics; makes self-shading effects visible in plots
   - Add `kd` validation (must be non-negative; zero = current pure-growth behaviour)
-- **CSV export**: Write simulation results for plotting
+- ~~**CSV export**~~ ✅ Completed
 - **Separate N and P tracking**: Break out nitrogen and phosphorus as separate state variables instead of generic substrate S
   - Update `MonodState` to include N and P fields
   - Update `MonodParameters` to include separate Ks_N, Ks_P, Yx_N, Yx_P
@@ -104,11 +111,12 @@ Parameters to expose: max growth rate, half-saturation constant, light extinctio
   - Update main.cpp output to show t, X, N, P
   - Update tests for new structure
 - **Advanced integration methods**: Runge-Kutta 2nd or 4th order
-- **Refactor validation to use constructor pattern**: Move validation from external functions to constructors
-  - Add constructors to MonodParameters and MonodState with validation
-  - Remove external validateParameters() and validateState() functions
+- **Refactor validation to use constructor pattern** *(partially complete)*: Move validation from external functions to constructors
+  - `MonodParameters` constructor now validates `Ki > 0` at construction ✅
+  - `Ks`, `mu_max`, `Yx_s`, `dt` still validated in external `validateParameters()` called by `simulate()`
+  - `MonodState` still has no constructor validation — external `validateState()` still called by `simulate()`
+  - Goal: remove `validateParameters()` and `validateState()` entirely; make invalid objects unconstructable
   - Consistent with ReactorGeometry's constructor validation approach
-  - Makes it impossible to create invalid objects (fail-fast at construction)
 - **Generic integration refactoring**: Extract `eulerStep()` into model-agnostic numerical library
   - Create generic `eulerStep(state, dt, derivative_function)` that works with any ODE system
   - Make integration methods reusable across projects
@@ -136,7 +144,6 @@ Parameters to expose: max growth rate, half-saturation constant, light extinctio
 
 ### Immediate priorities
 1. **Mortality/decay term**: Add `kd` to `MonodParameters` and `eulerStep` to enable growth → peak → decline dynamics
-2. **CSV export**: Write simulation results in column format (time, X, S) for plotting
 
 ### Near-term goals
 2. **Extended simulation test**: Run longer simulations (100+ steps) to verify numerical stability with light coupling and self-shading

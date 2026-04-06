@@ -1,5 +1,5 @@
-#include "inc/Monod.h"
-#include <iomanip>
+#include "CsvExport.h"
+#include "Monod.h"
 #include <iostream>
 
 /*
@@ -35,18 +35,8 @@ int main() {
     constexpr MonodState initial_state{0.05,5.0};
     const MonodParameters params{1.0, 1.5, 6.6, 100.0, 0.01};
     constexpr int num_steps = 1000;
-
-    const auto result = simulate(num_steps, initial_state, params, geometry);
-
-    double t{0};
-    std::cout << "\nSimulated Monod plankton growth" << std::endl;
-    std::cout << "t(days), X(biomass,μg C/mL), S(nutrient, mg N/L or mg P/L)" << std::endl;
-    for (const auto&[X, S, I] : result) {
-        std::cout << std::fixed << std::setprecision(2) << t << ", "
-        << std::setprecision(4) << X << ", " << S << std::endl;
-        t += params.dt;
-    }
-    std::cout << std::endl;
-
+    const auto results = simulate(num_steps, initial_state, params, geometry);
+    std::cout << "\nSimulated Monod plankton growth\n";
+    writeCsv(std::cout, results, params.dt);
     return 0;
 }

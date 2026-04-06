@@ -61,15 +61,15 @@ std::vector<SimulationRecord> simulate(int num_steps
                                        , const ReactorGeometry &geometry) {
     validateParameters(params);
     validateState(state);
-    SimulationRecord currentState(state.X, state.S, depthAveragedIrradiance(geometry, state.X));
+    const SimulationRecord currentState(state.X, state.S, depthAveragedIrradiance(geometry, state.X));
     std::vector<SimulationRecord> records;
     records.reserve(num_steps + 1);
     records.push_back(currentState);
 
     for (int i = 0; i < num_steps; ++i) {
-        auto& back = records.back();
+        const auto& back = records.back();
         MonodState monodState = eulerStep(MonodState(back.X, back.S), params, back.I_avg);
-        records.push_back(SimulationRecord(monodState.X, std::max(monodState.S, 0.0), depthAveragedIrradiance(geometry, monodState.X)));
+        records.emplace_back(monodState.X, std::max(monodState.S, 0.0), depthAveragedIrradiance(geometry, monodState.X));
     }
     return records;
 }

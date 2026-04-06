@@ -84,7 +84,7 @@ The simulation outputs comma-delimited time series data. This plot was generated
 - Euler integration for single time steps
 - Data structures for state and parameters
 - Stoichiometric mass balance verification
-- Multi-step simulation function returning time series
+- Multi-step simulation function returning `vector<SimulationRecord>` with X, S, and I_avg per step
 - Substrate depletion handling (clamp to zero, growth cessation verified)
 - Parameter and state validation with descriptive error messages
 - ReactorGeometry structure with constructor validation
@@ -92,13 +92,13 @@ The simulation outputs comma-delimited time series data. This plot was generated
 - Depth-averaged irradiance model for well-mixed reactor
 - Light-limited growth coupling via Liebig's Law: µ = µ_max × min(S/(Ks+S), I_avg/(Ki+I_avg))
 - ReactorGeometry passed into `simulate()` — fully configurable, no hardcoded values
-- Demo program outputting growth simulation data
+- CSV export (`writeCsv`) — writes header and fixed-precision time series to any `ostream`
+- Demo program outputting CSV growth simulation data to stdout
 - CMake build system with Google Test
 
 ### 🔮 Planned Features
 - Mortality/decay term (`kd`) — enables growth → peak → decline dynamics
-- CSV export for time-series data
-- Refactor validation to use constructor pattern consistently
+- Refactor validation to use constructor pattern consistently (`MonodParameters` constructor already validates `Ki`; `Ks`, `mu_max`, `Yx_s`, `dt`, and `MonodState` still use external validators called by `simulate()`)
 - Runge-Kutta integration methods
 
 ## Built With

@@ -2,11 +2,11 @@
 
 #include <cmath>
 
-double beerLambert(double depth, const ReactorGeometry& geometry, double X) {
+double beerLambert(const double depth, const ReactorGeometry& geometry, const double X) {
     return geometry.I0 * exp(-geometry.k * X * depth);
 }
 
-double depthAveragedIrradiance(const ReactorGeometry& geometry, double X) {
+double depthAveragedIrradiance(const ReactorGeometry& geometry, const double X) {
     if (X == 0.0) {
         return geometry.I0;
     }

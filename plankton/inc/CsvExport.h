@@ -2,6 +2,6 @@
 #include <ostream>
 #include <vector>
 
-class SimulationRecord;
+struct SimulationRecord;
 
 void writeCsv(std::ostream&, const std::vector<SimulationRecord>&, double dt);

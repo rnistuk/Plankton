@@ -16,6 +16,6 @@ void writeCsv(std::ostream& os, const std::vector<SimulationRecord>& records, do
     os << title << "\n";
     size_t i = 0;
     for (const auto& record : records) {
-        writeRecord(os, (i++) * dt, record);
+        writeRecord(os, static_cast<double>(i++) * dt, record);
     }
 }
