@@ -32,6 +32,7 @@ add_executable(PlanktonTests
         inc/CsvExport.h
         inc/SimulationRecord.h
         src/CsvExport_tests.cpp
+        src/Monod_Mortality_tests.cpp
 )
 
 include_directories(inc)

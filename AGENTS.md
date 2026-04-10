@@ -84,6 +84,12 @@ Parameters to expose: max growth rate, half-saturation constant, light extinctio
   - `Ki` (light half-saturation constant) added to `MonodParameters` with constructor validation
   - `eulerStep` updated to accept `I_avg`; defaults to `∞` for backward compatibility
   - Tests cover: zero light stops growth, light at half-saturation, substrate-limiting case
+- **Mortality/decay term**
+  - Added specific death rate `kd` to `MonodParameters` and `eulerStep`
+  - `dX/dt = µ × X - kd × X`
+  - Constructor validation ensures `kd >= 0`
+  - Simulation now correctly captures growth, peak, and decline dynamics
+  - Tests verify mortality behavior with and without substrate
 - **Configurable reactor geometry in `simulate()`**
   - `ReactorGeometry` is now passed into `simulate()` — no hardcoded values
   - Test verifies deeper reactor produces less growth than shallow reactor
@@ -98,12 +104,6 @@ Parameters to expose: max growth rate, half-saturation constant, light extinctio
 - **CMake build system** with Google Test integration
 
 ### ❌ Not started
-- **Mortality/decay term**: Add specific death rate `kd` to `MonodParameters` and `eulerStep`
-  - `dX/dt = µ × X - kd × X`
-  - Typical values: 0.05–0.3 day⁻¹ for phytoplankton
-  - Produces growth → peak → decline dynamics; makes self-shading effects visible in plots
-  - Add `kd` validation (must be non-negative; zero = current pure-growth behaviour)
-- ~~**CSV export**~~ ✅ Completed
 - **Separate N and P tracking**: Break out nitrogen and phosphorus as separate state variables instead of generic substrate S
   - Update `MonodState` to include N and P fields
   - Update `MonodParameters` to include separate Ks_N, Ks_P, Yx_N, Yx_P
@@ -135,7 +135,6 @@ Parameters to expose: max growth rate, half-saturation constant, light extinctio
 7. **Programming paradigm**: Functional style with pure functions and immutable data; domain constraints handled at orchestration level (`simulate()`), not in low-level functions (`eulerStep()`)
 
 ## Key assumptions
-- No mortality or maintenance respiration terms (pure growth model) — **planned for removal**
 - Depth-averaged light intensity (for initial version)
 - No spatial gradients (well-mixed reactor assumption)
 - Temperature and pH are optimal (not explicitly modeled)
@@ -143,11 +142,8 @@ Parameters to expose: max growth rate, half-saturation constant, light extinctio
 ## Next steps
 
 ### Immediate priorities
-1. **Mortality/decay term**: Add `kd` to `MonodParameters` and `eulerStep` to enable growth → peak → decline dynamics
-
-### Near-term goals
-2. **Extended simulation test**: Run longer simulations (100+ steps) to verify numerical stability with light coupling and self-shading
-3. **Refactor validation to use constructor pattern**: Move `validateParameters` and `validateState` into constructors, consistent with `ReactorGeometry`
+1. **Extended simulation test**: Run longer simulations (1000+ steps) to verify numerical stability with mortality, light coupling and self-shading
+2. **Refactor validation to use constructor pattern**: Move `validateParameters` and `validateState` into constructors, consistent with `ReactorGeometry`
 
 ### Future enhancements
 - Runge-Kutta integration (RK2 or RK4) for improved accuracy

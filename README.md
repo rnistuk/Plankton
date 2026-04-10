@@ -1,6 +1,16 @@
 # Plankton
 
-A C++ implementation of microalgae growth models using strict Test-Driven Development (TDD). This project models phytoplankton biomass dynamics using the Monod equation and numerical integration methods.
+A C++ implementation of microalgae growth models using strict Test-Driven 
+Development (TDD). This project models phytoplankton biomass dynamics using the 
+Monod equation and numerical integration methods.
+
+There's a company in the Metchosin/Langford area called [Industrial 
+Plankton](https://industrialplankton.com/) that I found while exploring the 
+industrial complexes looking for cool places to work. They even have a 
+[github repo](https://github.com/industrial-plankton)!
+
+I really enjoy making population dynamical models, so I thought I'd give 
+plankton a try!
 
 ## Getting Started
 
@@ -53,6 +63,7 @@ The test suite validates:
 - **Stoichiometric mass balance** - ΔX = ΔS × Y_x/s
 - **Edge cases** - Zero substrate, saturation conditions
 - **Beer-Lambert light attenuation** - Point irradiance and depth-averaged irradiance
+- **Mortality/decay term** - Specific death rate kd (dX/dt = µX - kdX)
 - **Reactor geometry validation** - Constructor-enforced parameter constraints
 
 ### Test-Driven Development Approach
@@ -67,15 +78,24 @@ All model behavior is validated through unit tests before implementation.
 
 ## Example Output
 
-The simulation outputs comma-delimited time series data. This plot was generated from that output:
+The simulation outputs comma-delimited time series data. These plots were 
+generated from that output:
 
 ![Plankton Growth Simulation](Resources/DataPlotMar19.svg)
 
-*100-step simulation showing biomass increase (blue) and substrate depletion (red) over 1 day with realistic phytoplankton parameters.*
+*100-step simulation showing biomass increase (blue) and substrate depletion 
+(red) over 1 day with realistic phytoplankton parameters.*
 
 ![Light-Limited Growth Simulation](Resources/DataPlotMar24.svg)
 
-*100-step simulation over 1 day showing biomass (X) increase and substrate (S) depletion with light-limited growth. Growth rate is governed by Liebig's Law — the minimum of substrate and depth-averaged irradiance (Beer-Lambert) limitation.*
+*100-step simulation over 1 day showing biomass (X) increase and substrate (S) 
+depletion with light-limited growth. Growth rate is governed by Liebig's Law — 
+the minimum of substrate and depth-averaged irradiance (Beer-Lambert) limitation.*
+
+![Growth Simulation with Mortality](Resources/Simulated%20Plankton%20Growth%20with%20Mortality.png)
+
+*1000-step simulation over 10 days showing biomass (X) increase, substrate (S)
+depletion with light-limited growth and mortality.
 
 ## Current Implementation Status
 
@@ -92,13 +112,13 @@ The simulation outputs comma-delimited time series data. This plot was generated
 - Depth-averaged irradiance model for well-mixed reactor
 - Light-limited growth coupling via Liebig's Law: µ = µ_max × min(S/(Ks+S), I_avg/(Ki+I_avg))
 - ReactorGeometry passed into `simulate()` — fully configurable, no hardcoded values
+- Mortality/decay term (`kd`) — enables growth → peak → decline dynamics
 - CSV export (`writeCsv`) — writes header and fixed-precision time series to any `ostream`
 - Demo program outputting CSV growth simulation data to stdout
 - CMake build system with Google Test
 
 ### 🔮 Planned Features
-- Mortality/decay term (`kd`) — enables growth → peak → decline dynamics
-- Refactor validation to use constructor pattern consistently (`MonodParameters` constructor already validates `Ki`; `Ks`, `mu_max`, `Yx_s`, `dt`, and `MonodState` still use external validators called by `simulate()`)
+- Refactor validation to use constructor pattern consistently (`MonodParameters` constructor already validates `Ki` and `kd`; `Ks`, `mu_max`, `Yx_s`, `dt`, and `MonodState` still use external validators called by `simulate()`)
 - Runge-Kutta integration methods
 
 ## Built With

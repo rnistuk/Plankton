@@ -24,6 +24,9 @@ Monod Parameters
     Yx/s (yield coefficient):
         For nitrogen: ~5-10 mg C / mg N (from Redfield 106:16 ≈ 6.6)
         For phosphorus: ~50-100 mg C / mg P (from Redfield 106:1 = 106)
+    kd (specific death rate):
+        0.05-0.3 day⁻¹ for phytoplankton
+        0.0 = pure growth model (no mortality)
     dt: 0.01-0.1 days (0.25-2.4 hours) for stability
  */
 int main() {
@@ -31,9 +34,10 @@ int main() {
     constexpr double depth = 0.05; // 5 cm
     constexpr double I0 = 200.0; // moderate sunlight
     constexpr double k = 0.2;
+    constexpr double Kd = 0.3; //
     const auto geometry = ReactorGeometry(depth, I0, k);
     constexpr MonodState initial_state{0.05,5.0};
-    const MonodParameters params{1.0, 1.5, 6.6, 100.0, 0.01};
+    const MonodParameters params{1.0, 1.5, 6.6, 100.0, Kd, 0.01};
     constexpr int num_steps = 1000;
     const auto results = simulate(num_steps, initial_state, params, geometry);
     std::cout << "\nSimulated Monod plankton growth\n";
