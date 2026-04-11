@@ -6,7 +6,7 @@ Monod equation and numerical integration methods.
 
 There's a company in the Metchosin/Langford area called [Industrial 
 Plankton](https://industrialplankton.com/) that I found while exploring the 
-industrial complexes looking for cool places to work. They even have a 
+industrial parks, looking for cool places to work. They even have a 
 [github repo](https://github.com/industrial-plankton)!
 
 I really enjoy making population dynamical models, so I thought I'd give 
