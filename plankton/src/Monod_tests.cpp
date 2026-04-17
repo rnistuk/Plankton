@@ -5,6 +5,7 @@
 
 constexpr double KS = 1.0;     // Half-saturation constant (or affinity constant)
 constexpr double MU_MAX = 2.0;
+constexpr double I_AVG_NON_LIMITING = 1000.0;
 
 TEST(Monod, ZeroSubstrateReturnsZeroGrowth) {
     // Arrange
@@ -70,7 +71,7 @@ TEST(EulerMonod, ZeroSubstrateBiomassStaysConstant) {
     const MonodParameters params{KS, MU_MAX, 0.5, 100.0, 0.0, 0.01 };
 
     // Act
-    state = eulerStep(state, params);
+    state = eulerStep(state, params, I_AVG_NON_LIMITING);
 
     // Assert
     EXPECT_DOUBLE_EQ(state.X, 1.0);
@@ -82,7 +83,7 @@ TEST(EulerMonod, PositiveSubstrateIncreasesBiomass) {
     const MonodParameters params{KS, MU_MAX, 0.5, 100, 0.0, 0.01 };
 
     // Act
-    auto [X, S] = eulerStep(state, params);
+    auto [X, S] = eulerStep(state, params, I_AVG_NON_LIMITING);
 
     // Assert
     EXPECT_GT(X, state.X);
@@ -95,7 +96,7 @@ TEST(EulerMonod, PositiveSubstrateDecreasesSubstrate) {
     const MonodParameters params{KS, MU_MAX, 0.5, 100, 0.0, 0.01 };
 
     // Act
-    const auto [X, S] = eulerStep(state, params);
+    const auto [X, S] = eulerStep(state, params, I_AVG_NON_LIMITING);
 
     // Assert
     EXPECT_LT(S, state.S);
@@ -166,7 +167,7 @@ TEST(Stoichiometry, SubstrateConsumedEqualsBiomassProduced) {
     const MonodParameters params{ KS, MU_MAX, 0.5, 100, 0.0, 0.01 };
 
     // Act
-    const auto [X, S] = eulerStep(state, params);
+    const auto [X, S] = eulerStep(state, params, I_AVG_NON_LIMITING);
 
     // Assert
     //EXPECT_DOUBLE_EQ(newState.X - state.X, (state.S-newState.S) * params.Yx_s);
@@ -207,6 +208,21 @@ TEST(SimulateMultipleSteps, SubstrateNeverNegative) {
     // Act & Assert
     for (const auto&[X, S, I] : simulate(num_steps, state, params, geometry)) {
         ASSERT_GE(S, 0.0) << "Substrate should never be negative";
+    }
+}
+
+TEST(SimulateMultipleSteps, CantForceNegativeBiomassWithHighKd) {
+    constexpr MonodState state{50.0, 5.0};
+    const MonodParameters params{KS, 1.5, 6.6, 100.0, 5.0, 0.1 };
+    constexpr int num_steps = 1000;
+    constexpr double depth = 0.05; // 5 cm
+    constexpr double I0 = 200.0; // moderate sunlight
+    constexpr double k = 0.2;
+    const auto geometry = ReactorGeometry(depth, I0, k);
+
+    // Act & Assert
+    for (const auto&[X, S, I] : simulate(num_steps, state, params, geometry)) {
+        ASSERT_GE(X, 0.0) << "Biomass should never be negative";
     }
 }
 
@@ -271,55 +287,23 @@ TEST(SimulateMultipleSteps, ResultContainsIAvg) {
 }
 
 TEST(ParameterValidation, NegativeKsThrowsException) {
-    // Arrange
-    constexpr MonodState state{1.0, 1.0};
-    const MonodParameters params{-1.0, 1.5, 6.6, 100.0, 0.0, 0.1};  // Negative Ks
-    double depth = 0.05; // 5 cm
-    double I0 = 200.0; // moderate sunlight
-    double k = 0.2;
-    const auto geometry = ReactorGeometry(depth, I0, k);
-
-    // Act & Assert
-    EXPECT_THROW(simulate(10, state, params, geometry), std::invalid_argument);
+    // Arrange, Act & Assert
+    EXPECT_THROW(MonodParameters(-1.0, 1.5, 6.6, 100.0, 0.0, 0.1), std::invalid_argument);
 }
 
 TEST(ParameterValidation, Negativemu_maxThrowsException) {
-    // Arrange
-    constexpr MonodState state{1.0, 1.0};
-    const MonodParameters params{1.0, -1.5, 6.6, 100.0, 0.0, 0.1};
-    double depth = 0.05; // 5 cm
-    double I0 = 200.0; // moderate sunlight
-    double k = 0.2;
-    const auto geometry = ReactorGeometry(depth, I0, k);
-
-    // Act & Assert
-    EXPECT_THROW(simulate(10, state, params, geometry), std::invalid_argument);
+    // Arrange, Act & Assert
+    EXPECT_THROW(MonodParameters(1.0, -1.5, 6.6, 100.0, 0.0, 0.1), std::invalid_argument);
 }
 
 TEST(ParameterValidation, NegativeYx_sThrowsException) {
-    // Arrange
-    constexpr MonodState state{1.0, 1.0};
-    const MonodParameters params{1.0, 1.5, -6.6, 100.0, 0.0, 0.1};
-    double depth = 0.05; // 5 cm
-    double I0 = 200.0; // moderate sunlight
-    double k = 0.2;
-    const auto geometry = ReactorGeometry(depth, I0, k);
-
-    // Act & Assert
-    EXPECT_THROW(simulate(10, state, params, geometry), std::invalid_argument);
+    // Arrange, Act & Assert
+    EXPECT_THROW(MonodParameters(1.0, 1.5, -6.6, 100.0, 0.0, 0.1), std::invalid_argument);
 }
 
 TEST(ParameterValidation, NegativeTimeStepThrowsException) {
-    // Arrange
-    constexpr MonodState state{1.0, 1.0};
-    const MonodParameters params{1.0, 1.5, 6.6, 100.0, 0.0, -0.1};
-    double depth = 0.05; // 5 cm
-    double I0 = 200.0; // moderate sunlight
-    double k = 0.2;
-    const auto geometry = ReactorGeometry(depth, I0, k);
-
-    // Act & Assert
-    EXPECT_THROW(simulate(10, state, params, geometry), std::invalid_argument);
+    // Arrange, Act & Assert
+    EXPECT_THROW(MonodParameters(1.0, 1.5, 6.6, 100.0, 0.0, -0.1), std::invalid_argument);
 }
 
 TEST(StateValidation, NegativeBiomassThrowsException) {

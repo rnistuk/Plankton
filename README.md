@@ -65,6 +65,7 @@ The test suite validates:
 - **Beer-Lambert light attenuation** - Point irradiance and depth-averaged irradiance
 - **Mortality/decay term** - Specific death rate kd (dX/dt = µX - kdX)
 - **Reactor geometry validation** - Constructor-enforced parameter constraints
+- **Numerical safety** - Biomass and substrate clamped to zero; Beer-Lambert guard prevents NaN from near-zero biomass
 
 ### Test-Driven Development Approach
 
@@ -113,12 +114,14 @@ depletion with light-limited growth and mortality.
 - Light-limited growth coupling via Liebig's Law: µ = µ_max × min(S/(Ks+S), I_avg/(Ki+I_avg))
 - ReactorGeometry passed into `simulate()` — fully configurable, no hardcoded values
 - Mortality/decay term (`kd`) — enables growth → peak → decline dynamics
+- Biomass clamped to zero under high mortality; substrate clamped to zero on depletion
+- All `MonodParameters` validated in constructor — invalid objects are unconstructable
+- Beer-Lambert near-zero guard prevents NaN/inf from denormal biomass values
 - CSV export (`writeCsv`) — writes header and fixed-precision time series to any `ostream`
 - Demo program outputting CSV growth simulation data to stdout
 - CMake build system with Google Test
 
 ### 🔮 Planned Features
-- Refactor validation to use constructor pattern consistently (`MonodParameters` constructor already validates `Ki` and `kd`; `Ks`, `mu_max`, `Yx_s`, `dt`, and `MonodState` still use external validators called by `simulate()`)
 - Runge-Kutta integration methods
 
 ## Built With

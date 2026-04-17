@@ -5,24 +5,6 @@
 #include "BeerLambert.h"
 
 // Private functions
-void validateParameters(const MonodParameters& params) {
-    if (params.Ks <= 0) {
-        throw std::invalid_argument("Ks must be positive");
-    }
-
-    if (params.mu_max <= 0) {
-        throw std::invalid_argument("mu_max must be positive");
-    }
-
-    if (params.Yx_s <= 0) {
-        throw std::invalid_argument("Yx_s must be positive");
-    }
-
-    if (params.dt <= 0) {
-        throw std::invalid_argument("dt must be positive");
-    }
-}
-
 void validateState(const MonodState& state) {
     if (state.X < 0) {
         throw std::invalid_argument("Biomass cannot be negative");
@@ -56,21 +38,20 @@ MonodState eulerStep(const MonodState& state, const MonodParameters& params, dou
     return newState;
 }
 
-std::vector<SimulationRecord> simulate(int num_steps
+std::vector<SimulationRecord> simulate(size_t num_steps
                                        , const MonodState &state
                                        , const MonodParameters &params
                                        , const ReactorGeometry &geometry) {
-    validateParameters(params);
     validateState(state);
     const SimulationRecord currentState(state.X, state.S, depthAveragedIrradiance(geometry, state.X));
     std::vector<SimulationRecord> records;
     records.reserve(num_steps + 1);
     records.push_back(currentState);
 
-    for (int i = 0; i < num_steps; ++i) {
+    for (size_t i = 0; i < num_steps; ++i) {
         const auto& back = records.back();
         MonodState monodState = eulerStep(MonodState(back.X, back.S), params, back.I_avg);
-        records.emplace_back(monodState.X, std::max(monodState.S, 0.0), depthAveragedIrradiance(geometry, monodState.X));
+        records.emplace_back( std::max(monodState.X, 0.0), std::max(monodState.S, 0.0), depthAveragedIrradiance(geometry, monodState.X));
     }
     return records;
 }

@@ -43,7 +43,7 @@ Parameters to expose: max growth rate, half-saturation constant, light extinctio
   - Comprehensive unit tests covering edge cases (zero substrate, half-saturation, high substrate, monotonicity)
 - **Data structures**
   - `MonodState` struct: tracks biomass (X) and substrate (S) concentrations — used as integration state
-  - `MonodParameters` struct: holds model constants (K_s, µ_max, Y_x/s, Ki, dt); constructor validates `Ki > 0` at construction (throws `std::invalid_argument`)
+  - `MonodParameters` struct: holds model constants (K_s, µ_max, Y_x/s, Ki, kd, dt); constructor validates all parameters at construction (throws `std::invalid_argument`)
   - `SimulationRecord` struct: output record per step — X, S, and depth-averaged I_avg
   - `SimulationParameters` struct: aggregates `MonodParameters` and `ReactorGeometry` into a single configuration type (defined, not yet used in simulation API)
 - **Euler integration** (`eulerStep`)
@@ -58,13 +58,16 @@ Parameters to expose: max growth rate, half-saturation constant, light extinctio
   - Returns initial state + num_steps (e.g., 10 steps = 11 records total)
   - Each record captures X, S, and depth-averaged I_avg at that step
   - Test verifies biomass increases and substrate decreases over time
-  - Clamps substrate to zero to prevent negative values (numerical safeguard)
+  - Clamps substrate `S` to zero to prevent negative values (numerical safeguard)
+  - Clamps biomass `X` to zero to prevent negative values under high mortality
   - Test verifies substrate never goes negative throughout simulation
+  - Test verifies biomass never goes negative under high `kd`
   - Test verifies biomass remains constant after substrate depletion
-- **Parameter validation** (`validateParameters`)
-  - Validates all MonodParameters before simulation starts
+- **Parameter validation**
+  - All `MonodParameters` fields validated in the constructor; invalid objects are unconstructable
   - Throws `std::invalid_argument` with descriptive messages for invalid inputs
-  - Tests verify proper exceptions for: negative/zero Ks, mu_max, Yx_s, dt
+  - `validateParameters()` external function removed — constructor enforcement is sufficient
+  - Tests verify proper exceptions for: negative/zero Ks, mu_max, Yx_s, Ki, dt; negative kd
 - **State validation** (`validateState`)
   - Validates initial MonodState before simulation starts
   - Throws `std::invalid_argument` for negative biomass or substrate
@@ -77,12 +80,12 @@ Parameters to expose: max growth rate, half-saturation constant, light extinctio
 - **Beer-Lambert light attenuation** (`beerLambert`, `depthAveragedIrradiance`)
   - `beerLambert(z, geometry, X)`: point irradiance I(z) = I₀ × exp(-k × X × z)
   - `depthAveragedIrradiance(geometry, X)`: depth-integrated average over full reactor depth
-  - Handles X = 0 edge case (returns I₀ — no biomass, no attenuation)
+  - Handles near-zero biomass edge case: guard checks `k × X × depth < 1e-15` (returns I₀); prevents division-by-zero and NaN from denormal X values
   - Tests cover: surface boundary condition, monotonicity with depth and biomass, analytical value, zero biomass
 - **Light-limited growth** (`lightLimitedGrowthRate`)
   - Implements Liebig's Law: µ = µ_max × min(S/(Ks+S), I_avg/(Ki+I_avg))
   - `Ki` (light half-saturation constant) added to `MonodParameters` with constructor validation
-  - `eulerStep` updated to accept `I_avg`; defaults to `∞` for backward compatibility
+  - `eulerStep` requires explicit `I_avg` argument (no default); callers must always provide a value
   - Tests cover: zero light stops growth, light at half-saturation, substrate-limiting case
 - **Mortality/decay term**
   - Added specific death rate `kd` to `MonodParameters` and `eulerStep`
@@ -111,12 +114,6 @@ Parameters to expose: max growth rate, half-saturation constant, light extinctio
   - Update main.cpp output to show t, X, N, P
   - Update tests for new structure
 - **Advanced integration methods**: Runge-Kutta 2nd or 4th order
-- **Refactor validation to use constructor pattern** *(partially complete)*: Move validation from external functions to constructors
-  - `MonodParameters` constructor now validates `Ki > 0` at construction ✅
-  - `Ks`, `mu_max`, `Yx_s`, `dt` still validated in external `validateParameters()` called by `simulate()`
-  - `MonodState` still has no constructor validation — external `validateState()` still called by `simulate()`
-  - Goal: remove `validateParameters()` and `validateState()` entirely; make invalid objects unconstructable
-  - Consistent with ReactorGeometry's constructor validation approach
 - **Generic integration refactoring**: Extract `eulerStep()` into model-agnostic numerical library
   - Create generic `eulerStep(state, dt, derivative_function)` that works with any ODE system
   - Make integration methods reusable across projects
@@ -132,7 +129,7 @@ Parameters to expose: max growth rate, half-saturation constant, light extinctio
 4. **Testing strategy**: Pure functions first (Monod), then integration (eulerStep), then simulation loop
 5. **Data structures**: Separate `State` (variables) from `Parameters` (constants)
 6. **Mass balance**: Explicit yield coefficient (Y_x/s) to couple biomass growth and substrate consumption
-7. **Programming paradigm**: Functional style with pure functions and immutable data; domain constraints handled at orchestration level (`simulate()`), not in low-level functions (`eulerStep()`)
+7. **Programming paradigm**: Functional style with pure functions and immutable data; domain constraints enforced at construction (structs) and at simulation entry (`validateState`); low-level functions (`eulerStep`) trust their inputs
 
 ## Key assumptions
 - Depth-averaged light intensity (for initial version)
@@ -143,7 +140,6 @@ Parameters to expose: max growth rate, half-saturation constant, light extinctio
 
 ### Immediate priorities
 1. **Extended simulation test**: Run longer simulations (1000+ steps) to verify numerical stability with mortality, light coupling and self-shading
-2. **Refactor validation to use constructor pattern**: Move `validateParameters` and `validateState` into constructors, consistent with `ReactorGeometry`
 
 ### Future enhancements
 - Runge-Kutta integration (RK2 or RK4) for improved accuracy

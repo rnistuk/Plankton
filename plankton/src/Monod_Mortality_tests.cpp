@@ -1,6 +1,8 @@
 #include "Monod.h"
 #include "gtest/gtest.h"
 
+constexpr double I_AVG_NON_LIMITING = 1000.0;
+
 TEST(Mortality, MortalityWithNoSubstrateDecreasesBiomass) {
     // Arrange
     constexpr double kd = 0.3;
@@ -9,7 +11,7 @@ TEST(Mortality, MortalityWithNoSubstrateDecreasesBiomass) {
     constexpr MonodState state{ 1.01, 0.0 };
 
     // Act
-    const auto [X, S] = eulerStep(state, params);
+    const auto [X, S] = eulerStep(state, params, I_AVG_NON_LIMITING);
 
     // Assert
     EXPECT_LT(X, state.X);
@@ -24,8 +26,8 @@ TEST(Mortality, MortalitySlowsGrowth) {
     constexpr MonodState state{ 1.01, 5.0 };
 
     // Act
-    const auto [X_no_mortality, S_no_mortality] = eulerStep(state, params_no_mortality);
-    const auto [X, S] = eulerStep(state, params);
+    const auto [X_no_mortality, S_no_mortality] = eulerStep(state, params_no_mortality, I_AVG_NON_LIMITING);
+    const auto [X, S] = eulerStep(state, params, I_AVG_NON_LIMITING);
 
     //Assert
     EXPECT_GT(X_no_mortality, X);
