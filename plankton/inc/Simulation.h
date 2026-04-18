@@ -4,7 +4,9 @@
 #include "SimulationParameters.h"
 #include "SimulationRecord.h"
 
+#include <functional>
 #include <vector>
 
+using LightModel = std::function<double(double X)>;
 std::vector<SimulationRecord> simulate(size_t, const MonodState&
-    , const SimulationParameters&);
+    , const SimulationParameters&, const LightModel&);

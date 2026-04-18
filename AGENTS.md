@@ -38,85 +38,49 @@ Parameters to expose: max growth rate, half-saturation constant, light extinctio
 ## Current state
 
 ### ✅ Completed
-- **Monod growth rate function** (`Monod(S, Ks, mu_max)`)
-  - Returns specific growth rate µ as a function of substrate concentration
-  - Comprehensive unit tests covering edge cases (zero substrate, half-saturation, high substrate, monotonicity)
 - **Data structures**
-  - `MonodState` struct: tracks biomass (X) and substrate (S) concentrations — used as integration state
-  - `MonodParameters` struct: holds model constants (K_s, µ_max, Y_x/s, Ki, kd, dt); constructor validates all parameters at construction (throws `std::invalid_argument`)
+  - `MonodState` struct: tracks biomass (X) and substrate (S); constructor validates both (throws `std::invalid_argument` for negative values)
+  - `MonodParameters` struct: holds biological constants (Ks, µ_max, Yx_s, Ki, kd); constructor validates all fields
+  - `SimulationParameters` struct: aggregates `MonodParameters`, `ReactorGeometry`, and `dt` (the integration timestep); constructor validates `dt > 0`
   - `SimulationRecord` struct: output record per step — X, S, and depth-averaged I_avg
-  - `SimulationParameters` struct: aggregates `MonodParameters` and `ReactorGeometry` into a single configuration type (defined, not yet used in simulation API)
 - **Euler integration** (`eulerStep`)
+  - Signature: `eulerStep(state, params, I_avg, dt)`
   - Single time-step integration using Euler's method
-  - Exponential biomass growth (dX/dt = µ × X)
+  - Exponential biomass growth with mortality: `dX/dt = (µ - kd) × X`
   - Substrate consumption coupled to biomass production via yield coefficient
   - Stoichiometric mass balance verified (ΔX = ΔS × Y_x/s)
   - Tests cover: zero substrate, positive growth, substrate depletion, mass conservation
 - **Multi-step simulation** (`simulate`)
-  - Runs multiple integration steps and returns time series
-  - Signature: `simulate(num_steps, initial_state, SimulationParameters)` returns `vector<SimulationRecord>`
-  - `SimulationParameters` aggregates `MonodParameters` and `ReactorGeometry` — the public API entry point
-  - Returns initial state + num_steps (e.g., 10 steps = 11 records total)
-  - Each record captures X, S, and depth-averaged I_avg at that step
-  - Test verifies biomass increases and substrate decreases over time
-  - Clamps substrate `S` to zero to prevent negative values (numerical safeguard)
-  - Clamps biomass `X` to zero to prevent negative values under high mortality
-  - Test verifies substrate never goes negative throughout simulation
-  - Test verifies biomass never goes negative under high `kd`
-  - Test verifies biomass remains constant after substrate depletion
-- **Parameter validation**
-  - All `MonodParameters` fields validated in the constructor; invalid objects are unconstructable
-  - Throws `std::invalid_argument` with descriptive messages for invalid inputs
-  - `validateParameters()` external function removed — constructor enforcement is sufficient
-  - Tests verify proper exceptions for: negative/zero Ks, mu_max, Yx_s, Ki, dt; negative kd
-- **State validation** (`validateState`)
-  - Validates initial MonodState before simulation starts
-  - Throws `std::invalid_argument` for negative biomass or substrate
-  - Tests verify proper exceptions for: negative X, negative S
+  - Signature: `simulate(num_steps, initial_state, SimulationParameters, LightModel)` returns `vector<SimulationRecord>`
+  - `LightModel` is `std::function<double(double X)>` — caller injects the light model (DIP); Beer-Lambert is the default via lambda
+  - Returns initial state + num_steps records (e.g., 10 steps = 11 records total)
+  - Each record captures X, S, and I_avg at that step
+  - Clamps X and S to zero to prevent negative values (numerical safeguard)
+  - Tests cover: growth/depletion, substrate never negative, biomass never negative under high kd, biomass constant after substrate depletion, deeper reactor reduces growth, I_avg recorded correctly
+- **Parameter and state validation**
+  - All `MonodParameters`, `MonodState`, `ReactorGeometry`, and `SimulationParameters` fields validated in constructors — invalid objects are unconstructable
+  - `dt` lives in `SimulationParameters`, not `MonodParameters` (numerical concern, not biological)
+  - `validateState()` removed — superseded by `MonodState` constructor
+  - Tests verify exceptions for all invalid inputs
 - **ReactorGeometry structure**
   - Defines physical reactor parameters: depth (m), I0 (surface irradiance), k (extinction coefficient)
-  - Constructor validates all parameters (depth > 0, I0 > 0, k > 0)
-  - Throws `std::invalid_argument` for invalid parameters
-  - Tests verify construction and validation behavior
+  - Constructor validates all parameters; throws `std::invalid_argument` for invalid values
 - **Beer-Lambert light attenuation** (`beerLambert`, `depthAveragedIrradiance`)
   - `beerLambert(z, geometry, X)`: point irradiance I(z) = I₀ × exp(-k × X × z)
   - `depthAveragedIrradiance(geometry, X)`: depth-integrated average over full reactor depth
-  - Handles near-zero biomass edge case: guard checks `k × X × depth < 1e-15` (returns I₀); prevents division-by-zero and NaN from denormal X values
-  - Tests cover: surface boundary condition, monotonicity with depth and biomass, analytical value, zero biomass
+  - Near-zero biomass guard: checks `k × X × depth < 1e-15` (returns I₀); prevents NaN from denormal X values
 - **Light-limited growth** (`lightLimitedGrowthRate`)
   - Implements Liebig's Law: µ = µ_max × min(S/(Ks+S), I_avg/(Ki+I_avg))
-  - `Ki` (light half-saturation constant) added to `MonodParameters` with constructor validation
-  - `eulerStep` requires explicit `I_avg` argument (no default); callers must always provide a value
-  - Tests cover: zero light stops growth, light at half-saturation, substrate-limiting case
-- **Mortality/decay term**
-  - Added specific death rate `kd` to `MonodParameters` and `eulerStep`
-  - `dX/dt = µ × X - kd × X`
-  - Constructor validation ensures `kd >= 0`
-  - Simulation now correctly captures growth, peak, and decline dynamics
-  - Tests verify mortality behavior with and without substrate
-- **Configurable reactor geometry in `simulate()`**
-  - `ReactorGeometry` is now passed into `simulate()` — no hardcoded values
-  - Test verifies deeper reactor produces less growth than shallow reactor
-- **CSV export** (`writeCsv`)
-  - Writes header and fixed-precision time series to any `ostream`
-  - Format: t (2dp), X, S, I_avg (4dp each), comma-space separated
-  - `writeRecord` helper in anonymous namespace
-- **Demo program** (`cli/main.cpp`)
-  - Runs 1000-step simulation with realistic phytoplankton parameters
-  - Outputs CSV to stdout via `writeCsv`
-  - Includes documented parameter ranges for algae cultures
-  - Includes only public headers (`Simulation.h`, `SimulationParameters.h`, `CsvExport.h`)
+  - `eulerStep` requires explicit `I_avg` argument — callers always provide a value
+- **Mortality/decay term** — `kd` in `MonodParameters`; enables growth → peak → decline dynamics
+- **CSV export** (`writeCsv`) — header + fixed-precision time series to any `ostream`
+- **Demo program** (`cli/main.cpp`) — 1000-step simulation with realistic phytoplankton parameters, CSV to stdout
+- **Module separation** — `Simulation.cpp` owns `simulate()`; `Monod.cpp` owns kinetics and integration only
 - **Public/internal header split**
-  - Public headers (safe to include by consumers): `Simulation.h`, `SimulationParameters.h`, `MonodParameters.h`, `MonodState.h`, `ReactorGeometry.h`, `SimulationRecord.h`, `CsvExport.h`
-  - Internal headers (implementation details, not exposed): `Monod.h`, `BeerLambert.h`
-- **Static library** (`plankton_lib`)
-  - All simulation sources built as a STATIC library via `add_library(plankton_lib STATIC ${PLANKTON_SOURCES})`
-  - `PLANKTON_SOURCES` CMake variable eliminates source list duplication
-  - `PlanktonTests` compiles sources directly via `${PLANKTON_SOURCES}` — tests against individual modules, not the library
-  - `cli/` links against `plankton_lib` via `target_link_libraries(cli PRIVATE plankton_lib)`
-  - Future GUI apps link against `plankton_lib` the same way
-- **`cli/` subdirectory** — standalone CMake project for the command-line interface
-- **CMake build system** with Google Test integration
+  - Public: `Simulation.h`, `SimulationParameters.h`, `MonodParameters.h`, `MonodState.h`, `ReactorGeometry.h`, `SimulationRecord.h`, `CsvExport.h`
+  - Internal: `Monod.h`, `BeerLambert.h`
+- **Static library** (`plankton_lib`) — simulation sources as STATIC library; `PlanktonTests` links against it; `cli/` links against it
+- **CMake** — `PLANKTON_SOURCES` lists `.cpp` files only (no headers); `PlanktonTests` links `plankton_lib` rather than recompiling sources; Google Test integration
 
 
 ### ❌ Not started
@@ -142,7 +106,9 @@ Parameters to expose: max growth rate, half-saturation constant, light extinctio
 4. **Testing strategy**: Pure functions first (Monod), then integration (eulerStep), then simulation loop
 5. **Data structures**: Separate `State` (variables) from `Parameters` (constants)
 6. **Mass balance**: Explicit yield coefficient (Y_x/s) to couple biomass growth and substrate consumption
-7. **Programming paradigm**: Functional style with pure functions and immutable data; domain constraints enforced at construction (structs) and at simulation entry (`validateState`); low-level functions (`eulerStep`) trust their inputs
+7. **Programming paradigm**: Functional style with pure functions and immutable data; domain constraints enforced at construction (all structs); low-level functions (`eulerStep`) trust their inputs
+8. **Integration timestep placement**: `dt` belongs in `SimulationParameters`, not `MonodParameters` — it is a numerical concern, not a biological constant
+9. **Light model injection**: `simulate()` accepts a `LightModel` (`std::function<double(double)>`) rather than calling `depthAveragedIrradiance()` directly — Beer-Lambert injected via lambda at call sites (DIP)
 
 ## Key assumptions
 - Depth-averaged light intensity (for initial version)
@@ -151,20 +117,14 @@ Parameters to expose: max growth rate, half-saturation constant, light extinctio
 
 ## Next steps
 
-### Immediate priorities
-1. **Extended simulation test**: Run longer simulations (1000+ steps) to verify numerical stability with mortality, light coupling and self-shading
-2. **Fix `validateState` linkage**: In `Monod.cpp`, `validateState` has external linkage (no `static`, no anonymous namespace) — wrap it in `namespace {}` to match intent
-3. **Move `simulate()` to `Simulation.cpp`**: Definition lives in `Monod.cpp` but is declared in `Simulation.h`; create `Simulation.cpp` to match the declared home and complete the SRP separation
-4. **Remove dead code**: `Monod()` (tagged "to be replaced") and the commented-out `simulate()` overload in `Monod.h` are noise — delete both
-5. **Fix CMake test linkage**: `PlanktonTests` recompiles `${PLANKTON_SOURCES}` directly instead of linking `plankton_lib` — it should link the library to validate the actual artifact
-6. **`MonodState` constructor validation**: Add constructor validation for negative X and S (mirrors `MonodParameters` / `ReactorGeometry` pattern; `validateState()` inside `simulate()` can then be removed)
-
 ### Future enhancements
-- **Move `dt` out of `MonodParameters`**: `dt` is a numerical integration parameter, not a biological constant — it belongs in `SimulationParameters` or a dedicated `IntegrationParameters` struct (SRP)
-- **Abstract light model in `simulate()`**: `simulate()` calls `depthAveragedIrradiance()` directly, coupling orchestration to Beer-Lambert; passing a light-model callable would invert this dependency (DIP)
-- Runge-Kutta integration (RK2 or RK4) for improved accuracy
-- Adaptive time stepping
-- Separate N and P tracking with dual nutrient limitation
-- 1D spatial light profile (depth-dependent growth)
-- Performance benchmarking
-- Parallelization for parameter sweeps
+- **Template `simulate()`**: Replace `std::function<double(double)>` `LightModel` with a template parameter to eliminate `std::function` overhead while preserving the injectable light model design
+- **Runge-Kutta integration** (RK2 or RK4) for improved accuracy
+- **Generic integration refactoring**: Extract `eulerStep()` into a model-agnostic integration function — `integrate(state, dt, derivative_fn)` — enabling RK2/RK4 without duplicating model logic
+- **Adaptive time stepping**
+- **Separate N and P tracking**: Replace generic substrate `S` with distinct nitrogen and phosphorus state variables; dual nutrient limitation via Liebig's Law
+  - `MonodState`: add N and P fields
+  - `MonodParameters`: add Ks_N, Ks_P, Yx_N, Yx_P
+  - Update `cli/` output to show t, X, N, P
+- **1D spatial light profile**: Extend from depth-averaged scalar to PDE
+- **Performance benchmarking and parallelization** for parameter sweeps
