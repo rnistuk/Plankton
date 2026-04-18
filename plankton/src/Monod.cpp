@@ -3,6 +3,7 @@
 #include <stdexcept>
 
 #include "BeerLambert.h"
+#include "SimulationParameters.h"
 
 // Private functions
 void validateState(const MonodState& state) {
@@ -40,9 +41,10 @@ MonodState eulerStep(const MonodState& state, const MonodParameters& params, dou
 
 std::vector<SimulationRecord> simulate(size_t num_steps
                                        , const MonodState &state
-                                       , const MonodParameters &params
-                                       , const ReactorGeometry &geometry) {
+                                       , const SimulationParameters& simParams) {
     validateState(state);
+    const auto& params = simParams.monod;
+    const auto& geometry = simParams.reactor;
     const SimulationRecord currentState(state.X, state.S, depthAveragedIrradiance(geometry, state.X));
     std::vector<SimulationRecord> records;
     records.reserve(num_steps + 1);

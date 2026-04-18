@@ -54,7 +54,8 @@ Parameters to expose: max growth rate, half-saturation constant, light extinctio
   - Tests cover: zero substrate, positive growth, substrate depletion, mass conservation
 - **Multi-step simulation** (`simulate`)
   - Runs multiple integration steps and returns time series
-  - Signature: `simulate(num_steps, initial_state, params, geometry)` returns `vector<SimulationRecord>`
+  - Signature: `simulate(num_steps, initial_state, SimulationParameters)` returns `vector<SimulationRecord>`
+  - `SimulationParameters` aggregates `MonodParameters` and `ReactorGeometry` — the public API entry point
   - Returns initial state + num_steps (e.g., 10 steps = 11 records total)
   - Each record captures X, S, and depth-averaged I_avg at that step
   - Test verifies biomass increases and substrate decreases over time
@@ -100,11 +101,18 @@ Parameters to expose: max growth rate, half-saturation constant, light extinctio
   - Writes header and fixed-precision time series to any `ostream`
   - Format: t (2dp), X, S, I_avg (4dp each), comma-space separated
   - `writeRecord` helper in anonymous namespace
-- **Demo program** (`main.cpp`)
+- **Demo program** (`cli/main.cpp`)
   - Runs 1000-step simulation with realistic phytoplankton parameters
   - Outputs CSV to stdout via `writeCsv`
   - Includes documented parameter ranges for algae cultures
+- **Public/internal header split**
+  - Public headers (safe to include by consumers): `Simulation.h`, `SimulationParameters.h`, `MonodParameters.h`, `MonodState.h`, `ReactorGeometry.h`, `SimulationRecord.h`, `CsvExport.h`
+  - Internal headers (implementation details, not exposed): `Monod.h`, `BeerLambert.h`
+- **`cli/` subdirectory** — separate CMake project for the command-line interface; links against the simulation library
 - **CMake build system** with Google Test integration
+
+### 🚧 In progress
+- **Static library refactor**: Extract simulation code into `plankton_lib` (STATIC); `cli/` and future GUI link against it. Use CMake `PLANKTON_SOURCES` variable to DRY up source lists. `PlanktonTests` compiles sources directly (not via library) to test individual modules.
 
 ### ❌ Not started
 - **Separate N and P tracking**: Break out nitrogen and phosphorus as separate state variables instead of generic substrate S
@@ -139,7 +147,8 @@ Parameters to expose: max growth rate, half-saturation constant, light extinctio
 ## Next steps
 
 ### Immediate priorities
-1. **Extended simulation test**: Run longer simulations (1000+ steps) to verify numerical stability with mortality, light coupling and self-shading
+1. **Complete static library refactor**: Define `PLANKTON_SOURCES` variable, add `plankton_lib` target, update `cli/CMakeLists.txt` to link against it, and flesh out `cli/main.cpp` with the full simulation and CSV output
+2. **Extended simulation test**: Run longer simulations (1000+ steps) to verify numerical stability with mortality, light coupling and self-shading
 
 ### Future enhancements
 - Runge-Kutta integration (RK2 or RK4) for improved accuracy

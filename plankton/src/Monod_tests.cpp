@@ -1,7 +1,10 @@
 #include "Monod.h"
+#include "SimulationParameters.h"
 
 #include <algorithm>
 #include <gtest/gtest.h>
+
+#include "Simulation.h"
 
 constexpr double KS = 1.0;     // Half-saturation constant (or affinity constant)
 constexpr double MU_MAX = 2.0;
@@ -184,9 +187,10 @@ TEST(SimulateMultipleSteps, BiomassIncreasesSubstrateDecreases) {
     constexpr double I0 = 200.0; // moderate sunlight
     constexpr double k = 0.2;
     const auto geometry = ReactorGeometry(depth, I0, k);
+    const auto simParams = SimulationParameters(params, geometry);
 
     // Act
-    const auto result = simulate(num_steps, state, params, geometry);
+    const auto result = simulate(num_steps, state, simParams);
 
 
     // Assert
@@ -204,9 +208,10 @@ TEST(SimulateMultipleSteps, SubstrateNeverNegative) {
     constexpr double I0 = 200.0; // moderate sunlight
     constexpr double k = 0.2;
     const auto geometry = ReactorGeometry(depth, I0, k);
+    const auto simParams = SimulationParameters(params, geometry);
 
     // Act & Assert
-    for (const auto&[X, S, I] : simulate(num_steps, state, params, geometry)) {
+    for (const auto&[X, S, I] : simulate(num_steps, state, simParams)) {
         ASSERT_GE(S, 0.0) << "Substrate should never be negative";
     }
 }
@@ -219,9 +224,10 @@ TEST(SimulateMultipleSteps, CantForceNegativeBiomassWithHighKd) {
     constexpr double I0 = 200.0; // moderate sunlight
     constexpr double k = 0.2;
     const auto geometry = ReactorGeometry(depth, I0, k);
+    const auto simParams = SimulationParameters(params, geometry);
 
     // Act & Assert
-    for (const auto&[X, S, I] : simulate(num_steps, state, params, geometry)) {
+    for (const auto&[X, S, I] : simulate(num_steps, state, simParams)) {
         ASSERT_GE(X, 0.0) << "Biomass should never be negative";
     }
 }
@@ -235,9 +241,10 @@ TEST(SimulateMultipleSteps, BiomassRemainsConstantAfterSubstrateIsZero) {
     constexpr double I0 = 200.0; // moderate sunlight
     constexpr double k = 0.2;
     const auto geometry = ReactorGeometry(depth, I0, k);
+    const auto simParams = SimulationParameters(params, geometry);
 
     //Act
-    const auto results = simulate(num_steps, state, params, geometry);
+    const auto results = simulate(num_steps, state, simParams);
 
     // Assert
     auto it = std::ranges::find_if(results.begin(), results.end(), [](const auto& r) {
@@ -261,9 +268,11 @@ TEST(SimulateMultipleSteps, DeeperReactorReducesGrowth) {
 
     const ReactorGeometry shallow{0.01, 200.0, 0.2};  // 1 cm
     const ReactorGeometry deep{0.20, 200.0, 0.2};     // 20 cm
+    const auto simParamsShallow = SimulationParameters(params, shallow);
+    const auto simParamsDeep = SimulationParameters(params, deep);
 
-    const auto shallow_result = simulate(num_steps, state, params, shallow);
-    const auto deep_result    = simulate(num_steps, state, params, deep);
+    const auto shallow_result = simulate(num_steps, state, simParamsShallow);
+    const auto deep_result    = simulate(num_steps, state, simParamsDeep);
 
     EXPECT_GT(shallow_result.back().X, deep_result.back().X);
 }
@@ -277,9 +286,10 @@ TEST(SimulateMultipleSteps, ResultContainsIAvg) {
     constexpr double I0 = 200.0; // moderate sunlight
     constexpr double k = 0.2;
     const auto geometry = ReactorGeometry(depth, I0, k);
+    const auto simParams = SimulationParameters(params, geometry);
 
     // Act
-    auto results = simulate(num_steps, state, params, geometry);
+    auto results = simulate(num_steps, state, simParams);
 
     // Assert
     auto [X, S, Iavg] = results.front();
@@ -314,9 +324,10 @@ TEST(StateValidation, NegativeBiomassThrowsException) {
     double I0 = 200.0; // moderate sunlight
     double k = 0.2;
     const auto geometry = ReactorGeometry(depth, I0, k);
+    const auto simParams = SimulationParameters(params, geometry);
 
     // Act & Assert
-    EXPECT_THROW(simulate(10, state, params, geometry), std::invalid_argument);
+    EXPECT_THROW(simulate(10, state, simParams), std::invalid_argument);
 }
 
 TEST(StateValidation, NegativeSubstrateThrowsException) {
@@ -327,9 +338,10 @@ TEST(StateValidation, NegativeSubstrateThrowsException) {
     double I0 = 200.0; // moderate sunlight
     double k = 0.2;
     const auto geometry = ReactorGeometry(depth, I0, k);
+    const auto simParams = SimulationParameters(params, geometry);
 
     // Act & Assert
-    EXPECT_THROW(simulate(10, state, params, geometry), std::invalid_argument);
+    EXPECT_THROW(simulate(10, state, simParams), std::invalid_argument);
 }
 
 TEST(ParameterValidation, NegativeKiThrowsException) {

@@ -1,5 +1,6 @@
 #include "CsvExport.h"
 #include "Monod.h"
+#include "Simulation.h"
 #include <iostream>
 
 /*
@@ -38,8 +39,10 @@ int main() {
     const auto geometry = ReactorGeometry(depth, I0, k);
     constexpr MonodState initial_state{0.05,5.0};
     const MonodParameters params{1.0, 1.5, 6.6, 100.0, Kd, 0.01};
+    const SimulationParameters simParams(params, geometry);
     constexpr int num_steps = 1000;
-    const auto results = simulate(num_steps, initial_state, params, geometry);
+    const auto results = simulate(num_steps
+        , initial_state, simParams);
     std::cout << "\nSimulated Monod plankton growth\n";
     writeCsv(std::cout, results, params.dt);
     return 0;

@@ -118,8 +118,13 @@ depletion with light-limited growth and mortality.
 - All `MonodParameters` validated in constructor — invalid objects are unconstructable
 - Beer-Lambert near-zero guard prevents NaN/inf from denormal biomass values
 - CSV export (`writeCsv`) — writes header and fixed-precision time series to any `ostream`
-- Demo program outputting CSV growth simulation data to stdout
+- Public API: `simulate(num_steps, MonodState, SimulationParameters)` — clean entry point for CLI and GUI consumers
+- Public/internal header split — consumers include only `Simulation.h`, `SimulationParameters.h`, `CsvExport.h`, and data structs
+- `cli/` subdirectory — standalone CMake project for the command-line interface
 - CMake build system with Google Test
+
+### 🚧 In Progress
+- Static library refactor: extract simulation code into `plankton_lib` so CLI and future GUI link against it
 
 ### 🔮 Planned Features
 - Runge-Kutta integration methods

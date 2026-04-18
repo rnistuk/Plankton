@@ -16,3 +16,4 @@ FetchContent_MakeAvailable(googletest)
 enable_testing()
 
 add_subdirectory(plankton)
+add_subdirectory(cli)

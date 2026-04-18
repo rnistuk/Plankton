@@ -13,7 +13,7 @@ double lightLimitedGrowthRate(double S, double I_avg, const MonodParameters& par
 
 MonodState eulerStep(const MonodState& state, const MonodParameters& params, double I_avg);
 
-std::vector<SimulationRecord> simulate(
+/*std::vector<SimulationRecord> simulate(
     size_t num_steps, const MonodState &state
     , const MonodParameters &params
-    , const ReactorGeometry &geometry);
+    , const ReactorGeometry &geometry);*/

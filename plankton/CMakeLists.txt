@@ -13,7 +13,8 @@ add_executable(Plankton main.cpp
         src/beerLambert.cpp
         src/CsvExport.cpp
         inc/CsvExport.h
-        inc/SimulationRecord.h)
+        inc/SimulationRecord.h
+        inc/Simulation.h)
 
 add_executable(PlanktonTests
         test_main.cpp
