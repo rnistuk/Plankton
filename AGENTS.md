@@ -153,8 +153,15 @@ Parameters to expose: max growth rate, half-saturation constant, light extinctio
 
 ### Immediate priorities
 1. **Extended simulation test**: Run longer simulations (1000+ steps) to verify numerical stability with mortality, light coupling and self-shading
+2. **Fix `validateState` linkage**: In `Monod.cpp`, `validateState` has external linkage (no `static`, no anonymous namespace) — wrap it in `namespace {}` to match intent
+3. **Move `simulate()` to `Simulation.cpp`**: Definition lives in `Monod.cpp` but is declared in `Simulation.h`; create `Simulation.cpp` to match the declared home and complete the SRP separation
+4. **Remove dead code**: `Monod()` (tagged "to be replaced") and the commented-out `simulate()` overload in `Monod.h` are noise — delete both
+5. **Fix CMake test linkage**: `PlanktonTests` recompiles `${PLANKTON_SOURCES}` directly instead of linking `plankton_lib` — it should link the library to validate the actual artifact
+6. **`MonodState` constructor validation**: Add constructor validation for negative X and S (mirrors `MonodParameters` / `ReactorGeometry` pattern; `validateState()` inside `simulate()` can then be removed)
 
 ### Future enhancements
+- **Move `dt` out of `MonodParameters`**: `dt` is a numerical integration parameter, not a biological constant — it belongs in `SimulationParameters` or a dedicated `IntegrationParameters` struct (SRP)
+- **Abstract light model in `simulate()`**: `simulate()` calls `depthAveragedIrradiance()` directly, coupling orchestration to Beer-Lambert; passing a light-model callable would invert this dependency (DIP)
 - Runge-Kutta integration (RK2 or RK4) for improved accuracy
 - Adaptive time stepping
 - Separate N and P tracking with dual nutrient limitation
