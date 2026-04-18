@@ -105,14 +105,19 @@ Parameters to expose: max growth rate, half-saturation constant, light extinctio
   - Runs 1000-step simulation with realistic phytoplankton parameters
   - Outputs CSV to stdout via `writeCsv`
   - Includes documented parameter ranges for algae cultures
+  - Includes only public headers (`Simulation.h`, `SimulationParameters.h`, `CsvExport.h`)
 - **Public/internal header split**
   - Public headers (safe to include by consumers): `Simulation.h`, `SimulationParameters.h`, `MonodParameters.h`, `MonodState.h`, `ReactorGeometry.h`, `SimulationRecord.h`, `CsvExport.h`
   - Internal headers (implementation details, not exposed): `Monod.h`, `BeerLambert.h`
-- **`cli/` subdirectory** — separate CMake project for the command-line interface; links against the simulation library
+- **Static library** (`plankton_lib`)
+  - All simulation sources built as a STATIC library via `add_library(plankton_lib STATIC ${PLANKTON_SOURCES})`
+  - `PLANKTON_SOURCES` CMake variable eliminates source list duplication
+  - `PlanktonTests` compiles sources directly via `${PLANKTON_SOURCES}` — tests against individual modules, not the library
+  - `cli/` links against `plankton_lib` via `target_link_libraries(cli PRIVATE plankton_lib)`
+  - Future GUI apps link against `plankton_lib` the same way
+- **`cli/` subdirectory** — standalone CMake project for the command-line interface
 - **CMake build system** with Google Test integration
 
-### 🚧 In progress
-- **Static library refactor**: Extract simulation code into `plankton_lib` (STATIC); `cli/` and future GUI link against it. Use CMake `PLANKTON_SOURCES` variable to DRY up source lists. `PlanktonTests` compiles sources directly (not via library) to test individual modules.
 
 ### ❌ Not started
 - **Separate N and P tracking**: Break out nitrogen and phosphorus as separate state variables instead of generic substrate S
@@ -147,8 +152,7 @@ Parameters to expose: max growth rate, half-saturation constant, light extinctio
 ## Next steps
 
 ### Immediate priorities
-1. **Complete static library refactor**: Define `PLANKTON_SOURCES` variable, add `plankton_lib` target, update `cli/CMakeLists.txt` to link against it, and flesh out `cli/main.cpp` with the full simulation and CSV output
-2. **Extended simulation test**: Run longer simulations (1000+ steps) to verify numerical stability with mortality, light coupling and self-shading
+1. **Extended simulation test**: Run longer simulations (1000+ steps) to verify numerical stability with mortality, light coupling and self-shading
 
 ### Future enhancements
 - Runge-Kutta integration (RK2 or RK4) for improved accuracy

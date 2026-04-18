@@ -120,11 +120,10 @@ depletion with light-limited growth and mortality.
 - CSV export (`writeCsv`) — writes header and fixed-precision time series to any `ostream`
 - Public API: `simulate(num_steps, MonodState, SimulationParameters)` — clean entry point for CLI and GUI consumers
 - Public/internal header split — consumers include only `Simulation.h`, `SimulationParameters.h`, `CsvExport.h`, and data structs
-- `cli/` subdirectory — standalone CMake project for the command-line interface
+- Static library (`plankton_lib`) — simulation code built as a reusable STATIC library; CLI and future GUI link against it
+- `cli/` subdirectory — standalone CMake project for the command-line interface, links against `plankton_lib`
+- CMake `PLANKTON_SOURCES` variable eliminates source list duplication between library and test targets
 - CMake build system with Google Test
-
-### 🚧 In Progress
-- Static library refactor: extract simulation code into `plankton_lib` so CLI and future GUI link against it
 
 ### 🔮 Planned Features
 - Runge-Kutta integration methods
