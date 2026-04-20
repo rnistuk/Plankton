@@ -150,6 +150,24 @@ Where:
 - S = substrate concentration (g/L)
 - K_s = half-saturation constant (g/L)
 
+## User-Configurable Parameters
+
+| Parameter | Name | Units | Acceptable Range | Description |
+|-----------|------|-------|-----------------|-------------|
+| `X` | Biomass concentration | g/L | [0, ~10] | Initial algae biomass. Typical inoculation 0.01–0.1 g/L; dense cultures up to ~5 g/L. |
+| `S` | Substrate concentration | g/L | [0, ~5] | Initial nutrient (e.g. nitrate) concentration. Growth ceases when depleted. |
+| `depth` | Reactor depth | m | (0, ~0.3] | Vertical light path length through the culture. Shallower reactors get more uniform light. |
+| `I0` | Surface irradiance | µmol photons m⁻² s⁻¹ | (0, ~2000] | Incident light intensity at the reactor surface. Full sunlight ≈ 2000; moderate indoor LED ≈ 100–400. |
+| `mu_max` | Maximum specific growth rate | day⁻¹ | (0, ~3] | Upper bound on growth rate under non-limiting conditions. Typical algae 0.5–2.0 day⁻¹. |
+| `Yx_s` | Biomass yield coefficient | g biomass / g substrate | (0, ~10] | Biomass produced per unit substrate consumed. Determines how fast S depletes relative to X growth. |
+| `Ki` | Light half-saturation constant | µmol photons m⁻² s⁻¹ | (0, ~500] | Irradiance at which light-limited growth rate is half of µ_max. Typical algae 50–200. |
+| `Ks` | Substrate half-saturation constant | g/L | (0, ~1] | Substrate concentration at which growth rate is half of µ_max. Typical algae 0.01–0.2 g/L. |
+| `k` | Extinction coefficient | L g⁻¹ m⁻¹ | (0, ~2] | Biomass-specific light attenuation. How strongly the culture absorbs light per unit biomass per unit depth. |
+| `Kd` | Mortality / decay rate | day⁻¹ | [0, ~0.5] | First-order loss rate covering respiration, cell death, and maintenance. Zero gives growth-only dynamics; typical algae 0.05–0.3. |
+| `dt` | Time step | days | (0, ~0.1] | Euler integration step size. Smaller values are more accurate but slower. Instability is likely above ~0.1 for typical parameter ranges. |
+
+**Note on `k` units:** the Beer-Lambert term is `k · X · depth`, where `X` is biomass concentration (g/L) and `depth` is in m, making `k` dimensionally L g⁻¹ m⁻¹.
+
 ## Development Roadmap
 
 See [AGENTS.md](AGENTS.md) for detailed development roadmap and design decisions.

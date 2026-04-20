@@ -17,3 +17,4 @@ enable_testing()
 
 add_subdirectory(plankton)
 add_subdirectory(cli)
+add_subdirectory(gui)
