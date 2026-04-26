@@ -51,7 +51,8 @@ Parameters to expose: max growth rate, half-saturation constant, light extinctio
   - Stoichiometric mass balance verified (ΔX = ΔS × Y_x/s)
   - Tests cover: zero substrate, positive growth, substrate depletion, mass conservation
 - **Multi-step simulation** (`simulate`)
-  - Signature: `simulate(num_steps, initial_state, SimulationParameters, LightModel)` returns `vector<SimulationRecord>`
+  - Signature: `simulate(const MonodState&, const SimulationParameters&, const LightModel&, bool& stop)` returns `vector<SimulationRecord>`
+  - `bool& stop` is an out-parameter the caller sets to `true` to interrupt a running simulation mid-flight (used by `SimulationRunner` in the GUI)
   - `LightModel` is `std::function<double(double X)>` — caller injects the light model (DIP); Beer-Lambert is the default via lambda
   - Returns initial state + num_steps records (e.g., 10 steps = 11 records total)
   - Each record captures X, S, and I_avg at that step
@@ -82,6 +83,18 @@ Parameters to expose: max growth rate, half-saturation constant, light extinctio
 - **Static library** (`plankton_lib`) — simulation sources as STATIC library; `PlanktonTests` links against it; `cli/` links against it
 - **CMake** — `PLANKTON_SOURCES` lists `.cpp` files only (no headers); `PlanktonTests` links `plankton_lib` rather than recompiling sources; Google Test integration
 
+
+### 🚧 In progress — Qt6 Dashboard GUI (`gui/`)
+
+- **Technology**: Qt6 (Widgets, Charts); `gui/` is a CMake target that links against `plankton_lib`
+- **Panel layout**: left column of input `QGroupBox` panels → right column with live chart
+  - `InitialConditions` — X (biomass), S (substrate), dt; maps to `MonodState` + `SimulationParameters::dt`
+  - `ReactorGeometry` — depth, I₀, k; maps to `ReactorGeometry` struct
+  - `KineticParameters` — Ks, µ_max, Yx/s, Ki, kd; maps to `MonodParameters`
+  - `Results` — `QChartView` displaying X and S time series
+- **`SimulationRunner`**: adapts `simulate()` for the GUI; holds `SimulationParameters`, `MonodState`, and `LightModel`; will use `bool& stop` to support a Stop button
+- **Immediate task**: DRY refactor of input panel widgets — the label/input/unit row pattern is repeated across all three input panels and should be extracted into a reusable helper
+- **Status**: proof of concept promoted to active development; panels render and lay out correctly; simulation wiring (collect inputs → run → update chart) not yet connected
 
 ### ❌ Not started
 - **Separate N and P tracking**: Break out nitrogen and phosphorus as separate state variables instead of generic substrate S

@@ -119,12 +119,13 @@ TEST(SimulateMultipleSteps, BiomassIncreasesSubstrateDecreases) {
     constexpr double I0 = 200.0; // moderate sunlight
     constexpr double k = 0.2;
     const auto geometry = ReactorGeometry(depth, I0, k);
-    const auto simParams = SimulationParameters(params, geometry, dt);
+    bool stop = false;
+    const auto simParams = SimulationParameters(params, geometry, dt, stop);
     const auto lightModel = [&geometry](double X) { return depthAveragedIrradiance(geometry, X); };
 
     // Act
-    const auto result = simulate(num_steps, state
-        , simParams, lightModel);
+    const auto result = simulate(state, simParams
+        , lightModel, stop);
 
     // Assert
     EXPECT_EQ(result.size(), num_steps + 1);
@@ -142,29 +143,32 @@ TEST(SimulateMultipleSteps, SubstrateNeverNegative) {
     constexpr double I0 = 200.0; // moderate sunlight
     constexpr double k = 0.2;
     const auto geometry = ReactorGeometry(depth, I0, k);
-    const auto simParams = SimulationParameters(params, geometry, dt);
+    size_t numSteps = 1000;
+    bool stop = false;
+    const auto simParams = SimulationParameters(params, geometry, dt, numSteps);
     const auto lightModel = [&geometry](double X) { return depthAveragedIrradiance(geometry, X); };
 
     // Act & Assert
-    for (const auto&[X, S, I] : simulate(num_steps, state, simParams, lightModel)) {
+    for (const auto&[X, S, I] : simulate(state, simParams, lightModel, stop)) {
         ASSERT_GE(S, 0.0) << "Substrate should never be negative";
     }
 }
 
 TEST(SimulateMultipleSteps, CantForceNegativeBiomassWithHighKd) {
     constexpr double dt = 0.01;
+    constexpr double numSteps = 1000;
+    bool stop = false;
     const MonodState state{50.0, 5.0};
     const MonodParameters params{KS, 1.5, 6.6, 100.0, 5.0};
-    constexpr int num_steps = 1000;
     constexpr double depth = 0.05; // 5 cm
     constexpr double I0 = 200.0; // moderate sunlight
     constexpr double k = 0.2;
     const auto geometry = ReactorGeometry(depth, I0, k);
-    const auto simParams = SimulationParameters(params, geometry, dt);
+    const auto simParams = SimulationParameters(params, geometry, dt, numSteps);
     const auto lightModel = [&geometry](double X) { return depthAveragedIrradiance(geometry, X); };
 
     // Act & Assert
-    for (const auto&[X, S, I] : simulate(num_steps, state, simParams, lightModel)) {
+    for (const auto&[X, S, I] : simulate(state, simParams, lightModel, stop)) {
         ASSERT_GE(X, 0.0) << "Biomass should never be negative";
     }
 }
@@ -172,18 +176,19 @@ TEST(SimulateMultipleSteps, CantForceNegativeBiomassWithHighKd) {
 TEST(SimulateMultipleSteps, BiomassRemainsConstantAfterSubstrateIsZero) {
     // Arrange
     constexpr double dt = 0.1;
+    bool stop = false;
     const MonodState state{50.0, 5.0};
     const MonodParameters params{KS, 1.5, 6.6, 100.0, 0.0};
-    constexpr int num_steps = 1000;  // TODO: the reactor geometry values are hard coded for now.
+    constexpr int numSteps = 1000;  // TODO: the reactor geometry values are hard coded for now.
     constexpr double depth = 0.05; // 5 cm
     constexpr double I0 = 200.0; // moderate sunlight
     constexpr double k = 0.2;
     const auto geometry = ReactorGeometry(depth, I0, k);
-    const auto simParams = SimulationParameters(params, geometry, dt);
+    const auto simParams = SimulationParameters(params, geometry, dt, numSteps);
     const auto lightModel = [&geometry](double X) { return depthAveragedIrradiance(geometry, X); };
 
     //Act
-    const auto results = simulate(num_steps, state, simParams, lightModel);
+    const auto results = simulate(state, simParams, lightModel, stop);
 
     // Assert
     auto it = std::ranges::find_if(results.begin(), results.end(), [](const auto& r) {
@@ -203,18 +208,20 @@ TEST(SimulateMultipleSteps, BiomassRemainsConstantAfterSubstrateIsZero) {
 TEST(SimulateMultipleSteps, DeeperReactorReducesGrowth) {
     const MonodState state{1.0, 10.0};
     const MonodParameters params{KS, MU_MAX, 0.5, 100.0, 0.0};
-    constexpr int num_steps = 10;
+    constexpr int numSteps = 10;
     constexpr double dt = 0.01;
 
     const ReactorGeometry shallow{0.01, 200.0, 0.2};  // 1 cm
     const ReactorGeometry deep{0.20, 200.0, 0.2};     // 20 cm
-    const auto simParamsShallow = SimulationParameters(params, shallow, dt);
-    const auto simParamsDeep = SimulationParameters(params, deep, dt);
+    const auto simParamsShallow = SimulationParameters(params, shallow, dt, numSteps);
+    const auto simParamsDeep = SimulationParameters(params, deep, dt, numSteps);
     const auto lightModelShallow = [&shallow](double X) { return depthAveragedIrradiance(shallow, X); };
     const auto lightModelDeep = [&deep](double X) { return depthAveragedIrradiance(deep, X); };
 
-    const auto shallow_result = simulate(num_steps, state, simParamsShallow, lightModelShallow);
-    const auto deep_result    = simulate(num_steps, state, simParamsDeep, lightModelDeep);
+    bool stop = false;
+
+    const auto shallow_result = simulate(state, simParamsShallow, lightModelShallow, stop);
+    const auto deep_result    = simulate(state, simParamsDeep, lightModelDeep, stop);
 
     EXPECT_GT(shallow_result.back().X, deep_result.back().X);
 }
@@ -222,18 +229,20 @@ TEST(SimulateMultipleSteps, DeeperReactorReducesGrowth) {
 TEST(SimulateMultipleSteps, ResultContainsIAvg) {
     // Arrange
     constexpr double dt = 0.01;
+    constexpr int numSteps = 1000;
+    bool stop = false;
+
     const MonodState state{50.0, 5.0};
     const MonodParameters params{KS, 1.5, 6.6, 100.0, 0.0};
-    constexpr int num_steps = 1000;
     constexpr double depth = 0.05; // 5 cm
     constexpr double I0 = 200.0; // moderate sunlight
     constexpr double k = 0.2;
     const auto geometry = ReactorGeometry(depth, I0, k);
-    const auto simParams = SimulationParameters(params, geometry, dt);
+    const auto simParams = SimulationParameters(params, geometry, dt, numSteps);
     const auto lightModel = [&geometry](double X) { return depthAveragedIrradiance(geometry, X); };
 
     // Act
-    auto results = simulate(num_steps, state, simParams, lightModel);
+    auto results = simulate(state, simParams, lightModel, stop);
 
     // Assert
     auto [X, S, Iavg] = results.front();
@@ -260,7 +269,7 @@ TEST(ParameterValidation, NegativeTimeStepThrowsException) {
     const MonodParameters params{1.0, 1.5, 6.6, 100.0, 0.0};
     const ReactorGeometry geometry{0.05, 200.0, 0.2};
     // Act & Assert
-    EXPECT_THROW(SimulationParameters(params, geometry, -0.1), std::invalid_argument);
+    EXPECT_THROW(SimulationParameters(params, geometry, -0.1, 1000), std::invalid_argument);
 }
 
 TEST(StateValidation, NegativeBiomassThrowsException) {

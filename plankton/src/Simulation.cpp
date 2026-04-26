@@ -2,17 +2,17 @@
 #include "Monod.h"
 #include "Simulation.h"
 
-std::vector<SimulationRecord> simulate(size_t num_steps
-                                       , const MonodState &state
+std::vector<SimulationRecord> simulate(const MonodState &state
                                        , const SimulationParameters& simParams
-                                       , const LightModel& lightModel) {
+                                       , const LightModel& lightModel
+                                       , bool& stop) {
     const auto& params = simParams.monod;
     const SimulationRecord currentState(state.X, state.S, lightModel(state.X));
     std::vector<SimulationRecord> records;
-    records.reserve(num_steps + 1);
+    records.reserve(simParams.numSteps + 1);
     records.push_back(currentState);
 
-    for (size_t i = 0; i < num_steps; ++i) {
+    for (size_t i = 0; i < simParams.numSteps || stop; ++i) {
         const auto& back = records.back();
         auto [X, S] = eulerStep(MonodState(back.X, back.S), params
                                 , back.I_avg, simParams.dt);
