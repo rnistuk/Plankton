@@ -16,6 +16,7 @@ add_executable(PlanktonTests test_main.cpp
         src/ReactorGeometry_tests.cpp
         src/CsvExport_tests.cpp
         src/Monod_Mortality_tests.cpp
+        src/Simulation_tests.cpp
 )
 
 target_link_libraries(PlanktonTests

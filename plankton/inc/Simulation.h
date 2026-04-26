@@ -1,6 +1,5 @@
 #pragma once
 #include "MonodState.h"
-#include "ReactorGeometry.h"
 #include "SimulationParameters.h"
 #include "SimulationRecord.h"
 
@@ -8,5 +7,6 @@
 #include <vector>
 
 using LightModel = std::function<double(double X)>;
-std::vector<SimulationRecord> simulate(size_t, const MonodState&
-    , const SimulationParameters&, const LightModel&);
+
+std::vector<SimulationRecord> simulate(const MonodState&
+    , const SimulationParameters&, const LightModel&, bool& stop);

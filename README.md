@@ -23,6 +23,7 @@ You'll need the following installed:
 - C++23 compatible compiler (GCC 13+, Clang 16+, or MSVC 2022+)
 - CMake 3.20 or higher
 - Google Test (automatically fetched by CMake)
+- Qt6 (Widgets, Charts) — required for the GUI target only
 - CLion (recommended) or any C++ IDE
 
 ### Installing
@@ -118,21 +119,27 @@ depletion with light-limited growth and mortality.
 - All `MonodParameters` validated in constructor — invalid objects are unconstructable
 - Beer-Lambert near-zero guard prevents NaN/inf from denormal biomass values
 - CSV export (`writeCsv`) — writes header and fixed-precision time series to any `ostream`
-- Public API: `simulate(num_steps, MonodState, SimulationParameters)` — clean entry point for CLI and GUI consumers
+- Public API: `simulate(const MonodState&, const SimulationParameters&, const LightModel&, bool& stop)` — clean entry point for CLI and GUI consumers; `bool& stop` allows mid-run interruption
 - Public/internal header split — consumers include only `Simulation.h`, `SimulationParameters.h`, `CsvExport.h`, and data structs
-- Static library (`plankton_lib`) — simulation code built as a reusable STATIC library; CLI and future GUI link against it
-- `cli/` subdirectory — standalone CMake project for the command-line interface, links against `plankton_lib`
+- Static library (`plankton_lib`) — simulation code built as a reusable STATIC library; both `cli/` and `gui/` link against it
+- `cli/` subdirectory — command-line interface; runs a 1000-step simulation and writes CSV to stdout
+- `gui/` subdirectory — Qt6 dashboard GUI with parameter input panels and live chart output (in progress)
 - CMake `PLANKTON_SOURCES` variable eliminates source list duplication between library and test targets
 - CMake build system with Google Test
 
 ### 🔮 Planned Features
-- Runge-Kutta integration methods
+- Runge-Kutta integration (RK2/RK4) for improved accuracy
+- Generic integrator refactor — extract `eulerStep()` into a model-agnostic `integrate(state, dt, derivative_fn)`
+- Separate N and P tracking — replace generic substrate S with distinct nitrogen and phosphorus state variables; dual nutrient limitation via Liebig's Law
+- 1D spatial light profile — extend from depth-averaged scalar to PDE
+- GUI wiring — collect panel inputs, run simulation via `SimulationRunner`, update live chart
 
 ## Built With
 
 * [C++23](https://en.cppreference.com/w/cpp/23) - Modern C++ standard
 * [CMake](https://cmake.org/) - Build system
 * [Google Test](https://github.com/google/googletest) - Testing framework
+* [Qt6](https://www.qt.io/) - GUI framework (Widgets, Charts)
 * [CLion](https://www.jetbrains.com/clion/) - Development environment
 
 ## Scientific Background
