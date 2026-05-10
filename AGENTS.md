@@ -90,12 +90,12 @@ Parameters to expose: max growth rate, half-saturation constant, light extinctio
   - Implement dual nutrient limitation (Liebig's law of the minimum)
   - Update main.cpp output to show t, X, N, P
   - Update tests for new structure
-- **Advanced integration methods**: Runge-Kutta 2nd or 4th order
-- **Generic integration refactoring**: Extract `eulerStep()` into model-agnostic numerical library
-  - Create generic `eulerStep(state, dt, derivative_function)` that works with any ODE system
-  - Make integration methods reusable across projects
-  - Move model-specific logic (Monod kinetics, stoichiometry) into derivative function
-  - Enable easier addition of RK2/RK4 without duplicating model logic
+- **Generic integration refactoring + RK2/RK4**: Rewrite `eulerStep` as a model-agnostic integrator
+  - Signature: `eulerStep(state, dt, derivative_fn)` where `state` and return value are raw doubles (or `std::vector<double>`), not `MonodState`
+  - `derivative_fn` is a callable `(state) → derivatives` that captures all model logic (Monod kinetics, stoichiometry, I_avg lookup) — the integrator knows nothing about biology
+  - This also resolves the `MonodState` type invariant issue: since the integrator returns raw doubles, the non-negativity clamping and `MonodState` construction happen in `simulate()` where the physical constraint belongs
+  - Swapping in RK2/RK4 then requires only a new integrator function with the same signature — no changes to the model or `simulate()`
+  - Move model-specific logic (Monod kinetics, stoichiometry) into the derivative function passed by the caller
 - **1D spatial light profile**: Extend from depth-averaged to PDE
 
 ## Design decisions made
@@ -119,8 +119,7 @@ Parameters to expose: max growth rate, half-saturation constant, light extinctio
 
 ### Future enhancements
 - **Template `simulate()`**: Replace `std::function<double(double)>` `LightModel` with a template parameter to eliminate `std::function` overhead while preserving the injectable light model design
-- **Runge-Kutta integration** (RK2 or RK4) for improved accuracy
-- **Generic integration refactoring**: Extract `eulerStep()` into a model-agnostic integration function — `integrate(state, dt, derivative_fn)` — enabling RK2/RK4 without duplicating model logic
+- **Generic integration refactoring + RK2/RK4**: Rewrite `eulerStep` so the integrator is model-agnostic — takes raw state doubles and a `derivative_fn` callable, returns raw doubles. Monod kinetics and stoichiometry move into the derivative function; `simulate()` handles clamping and `MonodState` construction. Once done, swapping in RK2/RK4 requires only a new integrator function with the same signature. Also resolves the `MonodState` type invariant issue (review item #2).
 - **Adaptive time stepping**
 - **Separate N and P tracking**: Replace generic substrate `S` with distinct nitrogen and phosphorus state variables; dual nutrient limitation via Liebig's Law
   - `MonodState`: add N and P fields
