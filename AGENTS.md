@@ -147,6 +147,13 @@ Results::setRecords(records)  ← clears & repopulates series
   - This also resolves the `MonodState` type invariant issue: since the integrator returns raw doubles, the non-negativity clamping and `MonodState` construction happen in `simulate()` where the physical constraint belongs
   - Swapping in RK2/RK4 then requires only a new integrator function with the same signature — no changes to the model or `simulate()`
   - Move model-specific logic (Monod kinetics, stoichiometry) into the derivative function passed by the caller
+- **Generic integration refactoring + RK2/RK4** *(near-term)*: Make `eulerStep` model-agnostic so any integration method (Euler, RK2, RK4) can be swapped in without touching the model.
+  - **Open decision (resolve before implementing):** what type represents the ODE state vector? Candidates: `std::vector<double>` (flexible, heap-allocated) or `std::array<double, N>` (stack, fixed-size). This choice determines the signatures of both the integrator and the derivative function.
+  - **Integrator signature:** `eulerStep(state, dt, derivative_fn)` — takes a state vector and a callable, returns a new state vector of the same type. Knows nothing about biology.
+  - **Monod derivative function** (name TBD, e.g. `monodDerivatives`): a pure function `(state, I_avg, MonodParameters) → derivatives` capturing all kinetics and stoichiometry. Lives in `Monod.h`/`Monod.cpp`. The caller in `simulate()` wraps it in a lambda that closes over the current step's `I_avg` and passes it to the integrator.
+  - **`simulate()` change:** builds the derivative lambda, calls the generic integrator, clamps to zero, and constructs `SimulationRecord`. Non-negativity enforcement moves here — resolves the `MonodState` type invariant issue (the current copy-then-mutate in `eulerStep` can produce negative values that violate the constructor's guarantee).
+  - **File changes:** `eulerStep` leaves `Monod.h`/`Monod.cpp` and moves to a new header (e.g. `Integration.h`) as a function template (implementation stays in the header; no new `.cpp` needed). `Monod.h` gains the new derivative function.
+  - **Swap to RK2/RK4:** once the derivative function exists, adding RK2/RK4 is a new integrator function with the same signature — no model changes needed.
 - **1D spatial light profile**: Extend from depth-averaged to PDE
 
 ## Design decisions made
@@ -165,12 +172,14 @@ Results::setRecords(records)  ← clears & repopulates series
 - Depth-averaged light intensity (for initial version)
 - No spatial gradients (well-mixed reactor assumption)
 - Temperature and pH are optimal (not explicitly modeled)
+- Dead biomass does not recycle substrate: the `kd` mortality term reduces X but does not return nutrients to S
 
 ## Next steps
 
 ### Future enhancements
 - **Template `simulate()`**: Replace `std::function<double(double)>` `LightModel` with a template parameter to eliminate `std::function` overhead while preserving the injectable light model design
 - **Generic integration refactoring + RK2/RK4**: Rewrite `eulerStep` so the integrator is model-agnostic — takes raw state doubles and a `derivative_fn` callable, returns raw doubles. Monod kinetics and stoichiometry move into the derivative function; `simulate()` handles clamping and `MonodState` construction. Once done, swapping in RK2/RK4 requires only a new integrator function with the same signature. Also resolves the `MonodState` type invariant issue (review item #2).
+- **RK2/RK4 integration**: see *Generic integration refactoring* in ❌ Not started — the derivative function extracted there enables this directly
 - **Adaptive time stepping**
 - **Separate N and P tracking**: Replace generic substrate `S` with distinct nitrogen and phosphorus state variables; dual nutrient limitation via Liebig's Law
   - `MonodState`: add N and P fields

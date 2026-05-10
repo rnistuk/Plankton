@@ -3,7 +3,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(PLANKTON_SOURCES
         src/Monod.cpp
-        src/beerLambert.cpp
+        src/BeerLambert.cpp
         src/CsvExport.cpp
         src/Simulation.cpp)
 

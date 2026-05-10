@@ -12,7 +12,7 @@ int main() {
     constexpr double k = 0.2;
     constexpr double Kd = 0.3; //
     constexpr double dt = 0.01;
-    constexpr int num_steps = 1000;
+    constexpr size_t num_steps = 1000;
     const auto geometry = ReactorGeometry(depth, I0, k);
 
 

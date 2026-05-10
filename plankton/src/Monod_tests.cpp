@@ -6,7 +6,7 @@
 #include <algorithm>
 #include <gtest/gtest.h>
 
-constexpr double KS = 1.0;     // Half-saturation constant (or affinity constant)
+constexpr double KS = 1.0; // Half-saturation constant (or affinity constant)
 constexpr double MU_MAX = 2.0;
 constexpr double I_AVG_NON_LIMITING = 1000.0;
 
@@ -40,7 +40,7 @@ TEST(EulerMonod, PositiveSubstrateDecreasesSubstrate) {
     // Arrange
     constexpr double dt = 0.01;
     const MonodState state{1.0, 5.0};
-    const MonodParameters params{KS, MU_MAX, 0.5, 100, 0.0 };
+    const MonodParameters params{KS, MU_MAX, 0.5, 100, 0.0};
 
     // Act
     const auto [X, S] = eulerStep(state, params, I_AVG_NON_LIMITING, dt);
@@ -52,10 +52,10 @@ TEST(EulerMonod, PositiveSubstrateDecreasesSubstrate) {
 TEST(EulerMonod, HighLightHighSubstrateGivesFullGrowth) {
     // Arrange
     constexpr double dt = 0.01;
-    const MonodState state{1.0, 100.0};   // high substrate
+    const MonodState state{1.0, 100.0}; // high substrate
     constexpr double Ki = 50.0;
     const MonodParameters params{KS, MU_MAX, 0.5, Ki, 0.0};
-    constexpr double I_avg = 1000.0;          // >> Ki, light is non-limiting
+    constexpr double I_avg = 1000.0; // >> Ki, light is non-limiting
 
     // Act
     const auto [X, S] = eulerStep(state, params, I_avg, dt);
@@ -76,7 +76,6 @@ TEST(LightLimitedGrowthRate, ZeroLightReturnsZeroGrowthRate) {
 
     // Assert
     EXPECT_DOUBLE_EQ(mu, 0.0);
-
 }
 
 TEST(LightLimitedGrowthRate, LightAtHalfSaturationGivesHalfMaxGrowth) {
@@ -96,14 +95,13 @@ TEST(LightLimitedGrowthRate, LightAtHalfSaturationGivesHalfMaxGrowth) {
 TEST(Stoichiometry, SubstrateConsumedEqualsBiomassProduced) {
     // Arrange
     constexpr double dt = 0.01;
-    const MonodState state{ 1.01, 5.0 };
-    const MonodParameters params{ KS, MU_MAX, 0.5, 100, 0.0};
+    const MonodState state{1.01, 5.0};
+    const MonodParameters params{KS, MU_MAX, 0.5, 100, 0.0};
 
     // Act
     const auto [X, S] = eulerStep(state, params, I_AVG_NON_LIMITING, dt);
 
     // Assert
-    //EXPECT_DOUBLE_EQ(newState.X - state.X, (state.S-newState.S) * params.Yx_s);
     EXPECT_NEAR(X - state.X, (state.S-S) * params.Yx_s, 1e-9);
 }
 
@@ -132,7 +130,7 @@ TEST(ParameterValidation, NegativeTimeStepThrowsException) {
 
 TEST(StateValidation, NegativeBiomassThrowsException) {
     // Arrange, Act & Assert
-    EXPECT_THROW( MonodState(-1.0, 5.0), std::invalid_argument);
+    EXPECT_THROW(MonodState(-1.0, 5.0), std::invalid_argument);
 }
 
 TEST(StateValidation, NegativeSubstrateThrowsException) {
@@ -142,10 +140,10 @@ TEST(StateValidation, NegativeSubstrateThrowsException) {
 
 TEST(ParameterValidation, NegativeKiThrowsException) {
     // Arrange, Act & Assert
-    EXPECT_THROW( MonodParameters(1.0, 1.5, 6.6, -0.1, 0.0), std::invalid_argument);
+    EXPECT_THROW(MonodParameters(1.0, 1.5, 6.6, -0.1, 0.0), std::invalid_argument);
 }
 
 TEST(ParameterValidation, ZeroKiThrowsException) {
     // Arrange, Act & Assert
-    EXPECT_THROW( MonodParameters(1.0, 1.5, 6.6, 0.0, 0.0), std::invalid_argument);
+    EXPECT_THROW(MonodParameters(1.0, 1.5, 6.6, 0.0, 0.0), std::invalid_argument);
 }
