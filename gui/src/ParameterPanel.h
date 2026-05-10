@@ -13,5 +13,5 @@ protected:
 public:
     explicit ParameterPanel(QWidget* parent = nullptr);
 
-    QLineEdit* addRow(const QString &label, const QString &value, const QString &units);
+    QLineEdit* addRow(const QString& name, const QString &label, const QString &value, const QString &units);
 };

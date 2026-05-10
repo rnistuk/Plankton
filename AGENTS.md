@@ -88,13 +88,51 @@ Parameters to expose: max growth rate, half-saturation constant, light extinctio
 
 - **Technology**: Qt6 (Widgets, Charts); `gui/` is a CMake target that links against `plankton_lib`
 - **Panel layout**: left column of input `QGroupBox` panels → right column with live chart
-  - `InitialConditions` — X (biomass), S (substrate), dt; maps to `MonodState` + `SimulationParameters::dt`
-  - `ReactorGeometry` — depth, I₀, k; maps to `ReactorGeometry` struct
-  - `KineticParameters` — Ks, µ_max, Yx/s, Ki, kd; maps to `MonodParameters`
+  - `InitialConditionsPanel` — X (biomass), S (substrate); maps to `MonodState`
+  - `ReactorGeometryPanel` — depth, I₀, k; maps to `ReactorGeometry` struct
+  - `KineticParametersPanel` — Ks, µ_max, Yx/s, Ki, kd; maps to `MonodParameters`
+  - `SimulationControlsPanel` — dt, numSteps; maps to `SimulationParameters::dt` and `numSteps`
   - `Results` — `QChartView` displaying X and S time series
 - **`SimulationRunner`**: adapts `simulate()` for the GUI; holds `SimulationParameters`, `MonodState`, and `LightModel`; will use `bool& stop` to support a Stop button
-- **Immediate task**: DRY refactor of input panel widgets — the label/input/unit row pattern is repeated across all three input panels and should be extracted into a reusable helper
-- **Status**: proof of concept promoted to active development; panels render and lay out correctly; simulation wiring (collect inputs → run → update chart) not yet connected
+- **GUI test target**: `GuiTests` is a separate CMake executable from `PlanktonTests`, with its own `gui/test_main.cpp` that constructs a `QApplication` before `RUN_ALL_TESTS()`. Keeps `plankton_lib` and `PlanktonTests` Qt-free.
+- **Test access seam for panels**: `ParameterPanel::addRow(name, label, value, units)` calls `setObjectName(name)` on the `QLineEdit` it constructs; tests reach in via `panel.findChild<QLineEdit*>("X")` to mutate text and verify accessors read live values. This avoids exposing private members and is good Qt hygiene independent of testing. (`addRow` originally took only `(label, value, units)`; the `name` parameter was hoisted to the front during refactor — separates "what this row *is*" from "what this row *shows*".)
+- **Status**: all four input panels are fully wired with the same recipe: ctor-args with defaults seeded into `QLineEdit`s, typed accessor reading live from the line edits, and three tests per panel pinning down the defaults / ctor-args / live-read seams. `InitialConditionsPanel::toState() → MonodState`, `ReactorGeometryPanel::toGeometry() → ReactorGeometry`, `KineticParametersPanel::toParameters() → MonodParameters`, `SimulationControlsPanel::dt() + numSteps() → (double, size_t)`. `Results::setRecords(dt, records)` populates the two `QLineSeries` and calls `createDefaultAxes()` *after* series have data — fixes the prior axis-render bug where `createDefaultAxes()` was called in `createChart()` before any series was attached. Thirteen GUI tests in `GuiTests` total. Next phase is `MainWindow` orchestration: promote panels to members, add a Run button, wire `runSimulation()` slot, trigger an initial render.
+
+#### Live-update wiring plan
+
+Goal: when the user edits any parameter, the chart re-renders automatically.
+
+**Signal flow:**
+```
+QLineEdit::editingFinished
+        │
+        ▼
+panel emits parametersChanged()
+        │
+        ▼
+MainWindow::runSimulation()  ← gathers values from all 3 panels
+        │
+        ▼
+simulate(...) returns vector<SimulationRecord>
+        │
+        ▼
+Results::setRecords(records)  ← clears & repopulates series
+```
+
+**Why `editingFinished` over `textChanged`:** `textChanged` fires per keystroke and would re-run the simulation on partial input like `"1."`. `editingFinished` fires once on Enter or focus loss, and only when the validator considers the input acceptable.
+
+**Why panel-forwards-signal over MainWindow-connects-directly-to-QLineEdits:** the panel keeps its internal layout private from `MainWindow`, and can later debounce, validate, or only emit when `hasAcceptableInput()` is true.
+
+**Step order (each step compiles and is small):**
+
+- **A — `parametersChanged()` signal on each panel.** Add `signals: void parametersChanged();`. In each panel ctor, connect every member `QLineEdit::editingFinished` → `parametersChanged`. Consider a helper on `ParameterPanel` so newly-added rows wire up automatically.
+- **B — Validators.** `QDoubleValidator` on doubles (X, S, dt, Ks, µ_max, Yx_s, Ki, kd, depth, I0, k) with `bottom = 0` where appropriate; `QIntValidator` on `numSteps`. Required for `editingFinished` to behave well.
+- **C — Typed accessors on each panel.** ✅ `MonodState toState()` on `InitialConditionsPanel`; ✅ `ReactorGeometry toGeometry()` on `ReactorGeometryPanel`; ✅ `MonodParameters toParameters()` on `KineticParametersPanel`; ✅ `double dt()` and `std::size_t numSteps()` on `SimulationControlsPanel`. Each panel locked down by three tests (defaults, ctor-args, live-read).
+- **D — Promote panels to `MainWindow` members.** Currently locals in the ctor; the slot needs to read them.
+- **E — `MainWindow::runSimulation()` slot.** Reads the three panels, calls `simulate(...)`, hands records to `Results`. Connect each panel's `parametersChanged` → this slot. Trigger once at end of `MainWindow` ctor for the initial render.
+- **F — ✅ `Results::setRecords(double dt, const std::vector<SimulationRecord>&)`.** Removes prior series, creates fresh `QLineSeries` for X and S with `t += dt` on the x-axis, and calls `chart->createDefaultAxes()` *after* the series have data. Axis-render bug fixed (`createDefaultAxes()` removed from `createChart()`). Locked down by `ResultsTest.SetRecordsPopulatesSeries`. Follow-up tidy-up (deferred): promote `xSeries`/`sSeries` to members initialised once in the ctor with object names `"X"`/`"S"`, then `clear()`+`append()` in `setRecords` instead of remove+recreate.
+
+**Threading:** first pass runs synchronously on the GUI thread — `simulate()` for ~1000 steps is fast enough. Move to a worker (with `std::stop_token` instead of `bool&`) only if/when the chart updates feel sluggish.
 
 ### ❌ Not started
 - **Separate N and P tracking**: Break out nitrogen and phosphorus as separate state variables instead of generic substrate S

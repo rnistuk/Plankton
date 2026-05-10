@@ -1,28 +1,27 @@
 #include "MainWindow.h"
-#include "InitialConditions.h"
-#include "KineticParameters.h"
-#include "ReactorGeometry.h"
-#include "Results.h"
+#include "Simulation.h"
+#include "BeerLambert.h"
 
 #include <QHBoxLayout>
-#include <QLabel>
-#include <QVBoxLayout>
-#include <QPushButton>
-#include <QTextEdit>
 
 MainWindow::MainWindow(QWidget *parent)  : QMainWindow(parent) {
     this->root = new QWidget(this);
-
-    auto* initial = new InitialConditions();
-    auto* reactor = new ReactorGeometry();
-    auto* kinetic = new KineticParameters();
-    auto* results = new Results();
-
+    this->controls = new SimulationControlsPanel();
+    this->initial = new InitialConditionsPanel();
+    this->kinetic = new KineticParametersPanel();
+    this->reactor = new ReactorGeometryPanel();
+    this->results = new Results();
 
     auto* inputLayout = new QVBoxLayout();
+    inputLayout->addWidget(controls);
     inputLayout->addWidget(initial);
     inputLayout->addWidget(reactor);
     inputLayout->addWidget(kinetic);
+
+    this->runButton = new QPushButton("Run");
+    inputLayout->addWidget(runButton);
+    connect(runButton, &QPushButton::clicked
+        , this, &MainWindow::runSimulation);
 
     auto* resultLayout = new QVBoxLayout();
     resultLayout->addWidget(results);
@@ -31,9 +30,26 @@ MainWindow::MainWindow(QWidget *parent)  : QMainWindow(parent) {
     layout->addLayout(inputLayout);
     layout->addLayout(resultLayout);
 
+    layout->setStretch(0, 0);   // input column: don't grow
+    layout->setStretch(1, 1);   // result column: claim all extra horizontal space
+
     root->setLayout(layout);
     setCentralWidget(root);
+    this->resize(1600, 800);
+
+    this->runSimulation();
 }
 
-MainWindow::~MainWindow() {
+void MainWindow::runSimulation() {
+    const auto state    = initial->toState();
+    const auto kinetics = kinetic->toParameters();
+    const auto geometry = reactor->toGeometry();
+    const SimulationParameters params(kinetics, geometry,
+                                      controls->dt(), controls->numSteps());
+    const auto lightModel = [geometry](double X) {
+        return depthAveragedIrradiance(geometry, X);
+    };
+    bool stop = false;
+    results->setRecords(controls->dt(),
+                        simulate(state, params, lightModel, stop));
 }
