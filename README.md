@@ -14,7 +14,8 @@ plankton a try!
 
 ## Getting Started
 
-These instructions will help you build and run the project on your local machine for development and testing purposes.
+These instructions will help you build and run the project on your local machine 
+for development and testing purposes.
 
 ### Prerequisites
 
@@ -48,11 +49,25 @@ The compiled tests will be available in the build directory.
 
 ## Running the tests
 
-Execute the test suite to verify all model behavior:
+Execute the simulation test suite:
 
 ```bash
-./build/PlanktonTests
+./build/plankton/PlanktonTests
 ```
+
+Execute the GUI test suite:
+
+```bash
+./build/gui/GuiTests
+```
+
+Run the CLI demo (outputs CSV to stdout):
+
+```bash
+./build/cli/cli
+```
+
+The static library is at `build/plankton/libplankton_lib.a`.
 
 ### What the tests verify
 
@@ -80,24 +95,9 @@ All model behavior is validated through unit tests before implementation.
 
 ## Example Output
 
-The simulation outputs comma-delimited time series data. These plots were 
-generated from that output:
+![Plankton Qt6 Dashboard GUI](Resources/PlanktonGUI.png)
 
-![Plankton Growth Simulation](Resources/DataPlotMar19.svg)
-
-*100-step simulation showing biomass increase (blue) and substrate depletion 
-(red) over 1 day with realistic phytoplankton parameters.*
-
-![Light-Limited Growth Simulation](Resources/DataPlotMar24.svg)
-
-*100-step simulation over 1 day showing biomass (X) increase and substrate (S) 
-depletion with light-limited growth. Growth rate is governed by Liebig's Law — 
-the minimum of substrate and depth-averaged irradiance (Beer-Lambert) limitation.*
-
-![Growth Simulation with Mortality](Resources/Simulated%20Plankton%20Growth%20with%20Mortality.png)
-
-*1000-step simulation over 10 days showing biomass (X) increase, substrate (S)
-depletion with light-limited growth and mortality.*
+*Plankton Application showing biomass (X) and substrate (S) time series with configurable reactor geometry, kinetic parameters, and simulation controls.*
 
 ## Current Implementation Status
 

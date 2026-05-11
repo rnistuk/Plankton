@@ -3,6 +3,10 @@
 .cache/
 .claude/worktrees/
 
+build/
+cmake-build-debug/
+cmake-build-release/
+
 # Prerequisites
 *.d
 
@@ -35,5 +39,3 @@
 *.exe
 *.out
 *.app
-
-.claude/worktrees/
