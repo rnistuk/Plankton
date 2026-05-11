@@ -1,11 +1,10 @@
-#include "BeerLambert.h"
 #include "Monod.h"
 #include "Simulation.h"
 
 std::vector<SimulationRecord> simulate(const MonodState &state
                                        , const SimulationParameters &simParams
                                        , const LightModel &lightModel
-                                       , bool &stop) {
+                                       , const bool &stop) {
     const auto &params = simParams.monod;
     const SimulationRecord currentState(state.X, state.S, lightModel(state.X));
     std::vector<SimulationRecord> records;

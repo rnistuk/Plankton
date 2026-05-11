@@ -4,14 +4,14 @@
 #include <ostream>
 
 namespace {
-    void writeRecord(std::ostream &os, double time_days, const SimulationRecord &record) {
+    void writeRecord(std::ostream &os, const double time_days, const SimulationRecord &record) {
         os << std::fixed << std::setprecision(2) << time_days << ", "
                 << std::setprecision(4) << record.X << ", " << record.S
                 << ", " << record.I_avg << "\n";
     }
 }
 
-void writeCsv(std::ostream &os, const std::vector<SimulationRecord> &records, double dt) {
+void writeCsv(std::ostream &os, const std::vector<SimulationRecord> &records, const double dt) {
     const std::string title("t (days), X (μg C/mL), S (mg N/L), I_avg (μmol/m²/s)");
     os << title << "\n";
     size_t i = 0;

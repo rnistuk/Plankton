@@ -7,7 +7,7 @@ double beerLambert(const double depth, const ReactorGeometry &geometry, const do
 }
 
 double depthAveragedIrradiance(const ReactorGeometry &geometry, const double X) {
-    double t = geometry.k * X * geometry.depth;
+    const double t = geometry.k * X * geometry.depth;
     if (t < 1e-15) {
         return geometry.I0;
     }

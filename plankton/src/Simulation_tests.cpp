@@ -43,7 +43,7 @@ TEST(SimulateMultipleSteps, SubstrateNeverNegative) {
     constexpr double I0 = 200.0; // moderate sunlight
     constexpr double k = 0.2;
     const auto geometry = ReactorGeometry(depth, I0, k);
-    size_t numSteps = 1000;
+    constexpr size_t numSteps = 1000;
     bool stop = false;
     const auto simParams = SimulationParameters(params, geometry, dt, numSteps);
     const auto lightModel = [&geometry](double X) { return depthAveragedIrradiance(geometry, X); };

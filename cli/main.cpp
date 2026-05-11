@@ -25,7 +25,7 @@ int main() {
     bool stop = false;
 
     const auto results = simulate( initial_state, simParams
-        , lightModel, stop);
+                                   , lightModel, stop);
     std::cout << "\nSimulated Monod plankton growth\n";
     writeCsv(std::cout, results, simParams.dt);
     return 0;

@@ -10,7 +10,7 @@ TEST(CsvExport, WriteCsvWritesHeaderLine) {
         {0.05, 5.0, 185.3},
         {0.06, 4.9, 182.1}
     };
-    const double dt = 0.01;
+    constexpr double dt = 0.01;
     std::ostringstream os;
     const std::string expectedTitle("t (days), X (μg C/mL), S (mg N/L), I_avg (μmol/m²/s)");
     std::string actualTitle;
@@ -31,7 +31,7 @@ TEST(CsvExport, WriteCsvWritesRecords) {
         {0.05, 5.0, 185.3},
         {0.06127, 4.9, 182.1}
     };
-    const double dt = 0.01;
+    constexpr double dt = 0.01;
     std::ostringstream os;
 
     // Act
