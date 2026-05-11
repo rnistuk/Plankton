@@ -1,9 +1,9 @@
 #pragma once
 #include "SimulationRecord.h"
 
-#include <QGroupBox>
-#include <QChart>
 #include <QChartView>
+#include <QGroupBox>
+#include <QLineSeries>
 
 class Results : public QGroupBox {
     Q_OBJECT
@@ -14,6 +14,8 @@ public:
 private:
     QChart* chart;
     QChartView* chartView;
+    QLineSeries* xSeries;
+    QLineSeries* sSeries;
 
     QChart* createChart();
 };

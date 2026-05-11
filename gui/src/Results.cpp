@@ -1,6 +1,6 @@
 #include "Results.h"
 
-#include <iostream>
+#include <algorithm>
 #include <QBoxLayout>
 #include <QLineSeries>
 
@@ -11,18 +11,23 @@ Results::Results(QWidget* parent) : QGroupBox(parent) {
 
     this->chart = this->createChart();
     this->chart->setObjectName("Results Chart");
-
-
     this->chartView->setChart(this->chart);
 
-    QLineSeries* xSeries = new QLineSeries;
-    xSeries->setName("Biomass X (g/L)");
+    this->xSeries = new QLineSeries;
+    this->xSeries->setObjectName("X");
+    this->xSeries->setName("Biomass X (g/L)");
 
-    QLineSeries* sSeries = new QLineSeries;
-    sSeries->setName("Substrate S (g/L)");
+    this->sSeries = new QLineSeries;
+    this->sSeries->setObjectName("S");
+    this->sSeries->setName("Substrate S (g/L)");
 
-    chart->addSeries(xSeries);
-    chart->addSeries(sSeries);
+    chart->addSeries(this->xSeries);
+    chart->addSeries(this->sSeries);
+
+    chart->createDefaultAxes();
+    chart->axes(Qt::Horizontal).first()->setTitleText("Time (days)");
+    chart->axes(Qt::Vertical).first()->setTitleText("Concentration (g/L)");
+
     auto* layout = new QVBoxLayout;
     layout->addWidget(this->chartView);
     this->setLayout(layout);
@@ -36,22 +41,17 @@ QChart* Results::createChart() {
 }
 
 void Results::setRecords(double dt, const std::vector<SimulationRecord>& records) {
-    this->chart->removeAllSeries();
-    QLineSeries* xSeries = new QLineSeries;
-    xSeries->setName("Biomass X (g/L)");
+    this->xSeries->clear();
+    this->sSeries->clear();
 
-    QLineSeries* sSeries = new QLineSeries;
-    sSeries->setName("Substrate S (g/L)");
     double t = 0.0;
+    double maxConc = 0.0;
     for (const auto& record : records) {
-        xSeries->append(t, record.X);
-        sSeries->append(t, record.S);
+        this->xSeries->append(t, record.X);
+        this->sSeries->append(t, record.S);
+        maxConc = std::max(maxConc, std::max(record.X, record.S));
         t += dt;
     }
-
-    this->chart->addSeries(xSeries);
-    this->chart->addSeries(sSeries);
-    chart->createDefaultAxes();
-    chart->axes(Qt::Horizontal).first()->setTitleText("Time (days)");
-    chart->axes(Qt::Vertical).first()->setTitleText("Concentration (g/L)");
+    chart->axes(Qt::Horizontal).first()->setRange(0, t - dt);
+    chart->axes(Qt::Vertical).first()->setRange(0, maxConc * 1.01);
 }

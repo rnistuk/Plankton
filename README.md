@@ -123,10 +123,10 @@ All model behavior is validated through unit tests before implementation.
 - Public/internal header split — consumers include only `Simulation.h`, `SimulationParameters.h`, `CsvExport.h`, and data structs
 - Static library (`plankton_lib`) — simulation code built as a reusable STATIC library; both `cli/` and `gui/` link against it
 - `cli/` subdirectory — command-line interface; runs a 1000-step simulation and writes CSV to stdout
-- `gui/` subdirectory — Qt6 dashboard GUI with parameter input panels and live chart output (in progress; all four input panels have typed accessors and `Results::setRecords()` populates the chart with axes — full test coverage in the `GuiTests` target. `MainWindow` orchestration is the active workstream)
+- `gui/` subdirectory — Qt6 dashboard GUI with parameter input panels and live chart output (in progress; all four input panels have typed accessors, `MainWindow` orchestration is complete with a Run button and initial render, and `Results::setRecords()` reuses stable member series — full test coverage in the `GuiTests` target. Live-update wiring is the active workstream)
 - CMake `PLANKTON_SOURCES` variable eliminates source list duplication between library and test targets
 - CMake build system with Google Test
-- `Results::setRecords()` clears the `QLineSeries` data, repopulates it, and calls `createDefaultAxes()` *after* series have data (fixes the prior axis-render bug where axes were created before any series was attached)
+- `Results::setRecords()` — `xSeries`/`sSeries` are members initialised once in the ctor with object names `"X"`/`"S"`; axes created once in the ctor with titles; `setRecords()` calls `clear()`+`append()` and updates axis ranges explicitly (`[0, t_max]` horizontal, `[0, maxConc × 1.01]` vertical)
 
 ### 🔮 Planned Features
 - **Generic integration refactoring + RK2/RK4** — make `eulerStep` model-agnostic: integrator takes a state vector and a `derivative_fn` callable, returns a new state vector; Monod kinetics move into a separate derivative function. Open decision: state vector type (`std::vector<double>` vs `std::array<double, N>`). Once done, RK2/RK4 is a new function with the same signature. See AGENTS.md for full design.
@@ -135,7 +135,6 @@ All model behavior is validated through unit tests before implementation.
 - GUI live-update wiring — when any parameter is edited, the chart re-renders automatically:
   - Each input panel emits `parametersChanged()` after each `QLineEdit::editingFinished`
   - `QDoubleValidator` / `QIntValidator` on every input so the signal only fires for acceptable values
-  - `MainWindow::runSimulation()` slot gathers panel values, calls `simulate()`, and hands records to `Results::setRecords()`
   - Synchronous on the GUI thread first; revisit with `std::stop_token` if updates feel sluggish
 
 ## Built With
