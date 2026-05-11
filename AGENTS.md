@@ -141,12 +141,6 @@ Results::setRecords(records)  ← clears & repopulates series
   - Implement dual nutrient limitation (Liebig's law of the minimum)
   - Update main.cpp output to show t, X, N, P
   - Update tests for new structure
-- **Generic integration refactoring + RK2/RK4**: Rewrite `eulerStep` as a model-agnostic integrator
-  - Signature: `eulerStep(state, dt, derivative_fn)` where `state` and return value are raw doubles (or `std::vector<double>`), not `MonodState`
-  - `derivative_fn` is a callable `(state) → derivatives` that captures all model logic (Monod kinetics, stoichiometry, I_avg lookup) — the integrator knows nothing about biology
-  - This also resolves the `MonodState` type invariant issue: since the integrator returns raw doubles, the non-negativity clamping and `MonodState` construction happen in `simulate()` where the physical constraint belongs
-  - Swapping in RK2/RK4 then requires only a new integrator function with the same signature — no changes to the model or `simulate()`
-  - Move model-specific logic (Monod kinetics, stoichiometry) into the derivative function passed by the caller
 - **Generic integration refactoring + RK2/RK4** *(near-term)*: Make `eulerStep` model-agnostic so any integration method (Euler, RK2, RK4) can be swapped in without touching the model.
   - **Open decision (resolve before implementing):** what type represents the ODE state vector? Candidates: `std::vector<double>` (flexible, heap-allocated) or `std::array<double, N>` (stack, fixed-size). This choice determines the signatures of both the integrator and the derivative function.
   - **Integrator signature:** `eulerStep(state, dt, derivative_fn)` — takes a state vector and a callable, returns a new state vector of the same type. Knows nothing about biology.
@@ -178,7 +172,6 @@ Results::setRecords(records)  ← clears & repopulates series
 
 ### Future enhancements
 - **Template `simulate()`**: Replace `std::function<double(double)>` `LightModel` with a template parameter to eliminate `std::function` overhead while preserving the injectable light model design
-- **Generic integration refactoring + RK2/RK4**: Rewrite `eulerStep` so the integrator is model-agnostic — takes raw state doubles and a `derivative_fn` callable, returns raw doubles. Monod kinetics and stoichiometry move into the derivative function; `simulate()` handles clamping and `MonodState` construction. Once done, swapping in RK2/RK4 requires only a new integrator function with the same signature. Also resolves the `MonodState` type invariant issue (review item #2).
 - **RK2/RK4 integration**: see *Generic integration refactoring* in ❌ Not started — the derivative function extracted there enables this directly
 - **Adaptive time stepping**
 - **Separate N and P tracking**: Replace generic substrate `S` with distinct nitrogen and phosphorus state variables; dual nutrient limitation via Liebig's Law

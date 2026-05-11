@@ -21,7 +21,7 @@ These instructions will help you build and run the project on your local machine
 You'll need the following installed:
 
 - C++23 compatible compiler (GCC 13+, Clang 16+, or MSVC 2022+)
-- CMake 3.20 or higher
+- CMake 4.1 or higher
 - Google Test (automatically fetched by CMake)
 - Qt6 (Widgets, Charts) — required for the GUI target only
 - CLion (recommended) or any C++ IDE
@@ -31,7 +31,7 @@ You'll need the following installed:
 Clone the repository and build the project:
 
 ```bash
-git clone https://github.com/yourusername/Plankton.git
+git clone https://github.com/rnistuk/Plankton.git
 cd Plankton
 ```
 
@@ -97,7 +97,7 @@ the minimum of substrate and depth-averaged irradiance (Beer-Lambert) limitation
 ![Growth Simulation with Mortality](Resources/Simulated%20Plankton%20Growth%20with%20Mortality.png)
 
 *1000-step simulation over 10 days showing biomass (X) increase, substrate (S)
-depletion with light-limited growth and mortality.
+depletion with light-limited growth and mortality.*
 
 ## Current Implementation Status
 
@@ -126,18 +126,16 @@ depletion with light-limited growth and mortality.
 - `gui/` subdirectory — Qt6 dashboard GUI with parameter input panels and live chart output (in progress; all four input panels have typed accessors and `Results::setRecords()` populates the chart with axes — full test coverage in the `GuiTests` target. `MainWindow` orchestration is the active workstream)
 - CMake `PLANKTON_SOURCES` variable eliminates source list duplication between library and test targets
 - CMake build system with Google Test
+- `Results::setRecords()` clears the `QLineSeries` data, repopulates it, and calls `createDefaultAxes()` *after* series have data (fixes the prior axis-render bug where axes were created before any series was attached)
 
 ### 🔮 Planned Features
-- Runge-Kutta integration (RK2/RK4) for improved accuracy
-- Generic integrator refactor — extract `eulerStep()` into a model-agnostic `integrate(state, dt, derivative_fn)`
+- **Generic integration refactoring + RK2/RK4** — make `eulerStep` model-agnostic: integrator takes a state vector and a `derivative_fn` callable, returns a new state vector; Monod kinetics move into a separate derivative function. Open decision: state vector type (`std::vector<double>` vs `std::array<double, N>`). Once done, RK2/RK4 is a new function with the same signature. See AGENTS.md for full design.
 - Separate N and P tracking — replace generic substrate S with distinct nitrogen and phosphorus state variables; dual nutrient limitation via Liebig's Law
 - 1D spatial light profile — extend from depth-averaged scalar to PDE
 - GUI live-update wiring — when any parameter is edited, the chart re-renders automatically:
   - Each input panel emits `parametersChanged()` after each `QLineEdit::editingFinished`
   - `QDoubleValidator` / `QIntValidator` on every input so the signal only fires for acceptable values
-  - Typed accessors on each panel (`toState`, `toParameters`, `toGeometry`, plus `dt`/`numSteps` on `SimulationControlsPanel`)
   - `MainWindow::runSimulation()` slot gathers panel values, calls `simulate()`, and hands records to `Results::setRecords()`
-  - `Results::setRecords()` clears the `QLineSeries` data, repopulates it, and calls `createDefaultAxes()` *after* series have data (fixes the current axis-render bug)
   - Synchronous on the GUI thread first; revisit with `std::stop_token` if updates feel sluggish
 
 ## Built With
