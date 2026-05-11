@@ -5,6 +5,7 @@
 #include <QHBoxLayout>
 
 MainWindow::MainWindow(QWidget *parent)  : QMainWindow(parent) {
+    this->setWindowTitle("Plankton Growth Simulator");
     this->root = new QWidget(this);
     this->controls = new SimulationControlsPanel();
     this->initial = new InitialConditionsPanel();
@@ -22,6 +23,10 @@ MainWindow::MainWindow(QWidget *parent)  : QMainWindow(parent) {
     inputLayout->addWidget(runButton);
     connect(runButton, &QPushButton::clicked
         , this, &MainWindow::runSimulation);
+
+    inputLayout->addStretch(1);
+
+    inputLayout->setSpacing(25);
 
     auto* resultLayout = new QVBoxLayout();
     resultLayout->addWidget(results);

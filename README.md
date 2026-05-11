@@ -146,20 +146,54 @@ All model behavior is validated through unit tests before implementation.
 * [Qt6](https://www.qt.io/) - GUI framework (Widgets, Charts)
 * [CLion](https://www.jetbrains.com/clion/) - Development environment
 
-## Scientific Background
+## Model Description
 
-### Monod Equation
-The Monod equation describes microbial growth rate as a function of limiting substrate concentration:
+### Light-Limited Growth (Liebig's Law)
+Growth rate is governed by whichever of nutrient or light is most limiting:
 
 ```
-µ = µ_max × (S / (K_s + S))
+µ = µ_max × min( S / (Ks + S),  I_avg / (Ki + I_avg) )
 ```
 
 Where:
-- µ = specific growth rate (1/h)
-- µ_max = maximum specific growth rate (1/h)
-- S = substrate concentration (g/L)
-- K_s = half-saturation constant (g/L)
+- µ = specific growth rate (1/day)
+- µ_max = maximum specific growth rate (1/day)
+- S = substrate (nutrient) concentration (g/L)
+- Ks = half-saturation constant for nutrient (g/L)
+- I_avg = depth-averaged irradiance (µmol photons m⁻² s⁻¹)
+- Ki = half-saturation constant for light (µmol photons m⁻² s⁻¹)
+
+### Biomass and Substrate Dynamics
+Biomass grows at the net rate (growth minus mortality) and substrate is consumed proportionally:
+
+```
+dX/dt = (µ - kd) × X
+dS/dt = -(µ / Yx_s) × X
+```
+
+Where:
+- X = biomass concentration (g/L)
+- kd = specific decay rate (1/day)
+- Yx_s = biomass yield coefficient (g biomass / g substrate)
+
+### Beer-Lambert Light Attenuation
+The culture self-shades: as biomass X increases, light penetrates less deeply, reducing I_avg, which in turn reduces µ via Liebig's Law. This creates a negative feedback — dense cultures grow more slowly due to light limitation even when nutrients are abundant. Irradiance decays exponentially with depth through the culture:
+
+```
+I(z) = I₀ × exp(-k × X × z)
+```
+
+Depth-averaged over the full reactor:
+
+```
+I_avg = (I₀ / (k × X × d)) × (1 - exp(-k × X × d))
+```
+
+Where:
+- I₀ = surface irradiance (µmol photons m⁻² s⁻¹)
+- k = light extinction coefficient (m⁻¹ · (g/L)⁻¹)
+- d = reactor depth (m)
+- z = depth coordinate (m)
 
 ## Development Roadmap
 

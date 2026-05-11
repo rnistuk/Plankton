@@ -52,4 +52,6 @@ void Results::setRecords(double dt, const std::vector<SimulationRecord>& records
     this->chart->addSeries(xSeries);
     this->chart->addSeries(sSeries);
     chart->createDefaultAxes();
+    chart->axes(Qt::Horizontal).first()->setTitleText("Time (days)");
+    chart->axes(Qt::Vertical).first()->setTitleText("Concentration (g/L)");
 }
