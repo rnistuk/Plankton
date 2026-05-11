@@ -8,5 +8,5 @@
 
 using LightModel = std::function<double(double X)>;
 
-std::vector<SimulationRecord> simulate(const MonodState&
-    , const SimulationParameters&, const LightModel&, bool& stop);
+std::vector<SimulationRecord> simulate(const MonodState &
+                                       , const SimulationParameters &, const LightModel &, bool &stop);

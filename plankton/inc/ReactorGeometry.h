@@ -3,12 +3,12 @@
 
 struct ReactorGeometry {
     double depth; // Depth of the reactor in meters
-    double I0;   // surface irradiance at the reactor surface
-    double k;     // extinction coefficient
+    double I0; // surface irradiance at the reactor surface
+    double k; // extinction coefficient
 
     ReactorGeometry() = delete;
 
-    ReactorGeometry(double depth, double I0, double k): depth(depth), I0(I0), k(k) {
+    ReactorGeometry(double depth, double I0, double k) : depth(depth), I0(I0), k(k) {
         validateReactorGeometry();
     }
 

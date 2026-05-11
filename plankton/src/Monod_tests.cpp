@@ -89,7 +89,7 @@ TEST(LightLimitedGrowthRate, LightAtHalfSaturationGivesHalfMaxGrowth) {
     const auto mu = lightLimitedGrowthRate(S, I_avg, params);
 
     // Assert
-    EXPECT_NEAR(mu, MU_MAX/2.0, 0.03);
+    EXPECT_NEAR(mu, MU_MAX / 2.0, 0.03);
 }
 
 TEST(Stoichiometry, SubstrateConsumedEqualsBiomassProduced) {
@@ -102,7 +102,7 @@ TEST(Stoichiometry, SubstrateConsumedEqualsBiomassProduced) {
     const auto [X, S] = eulerStep(state, params, I_AVG_NON_LIMITING, dt);
 
     // Assert
-    EXPECT_NEAR(X - state.X, (state.S-S) * params.Yx_s, 1e-9);
+    EXPECT_NEAR(X - state.X, (state.S - S) * params.Yx_s, 1e-9);
 }
 
 TEST(ParameterValidation, NegativeKsThrowsException) {

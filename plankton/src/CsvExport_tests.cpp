@@ -6,7 +6,7 @@
 
 TEST(CsvExport, WriteCsvWritesHeaderLine) {
     // Arrange
-    const std::vector<SimulationRecord> records={
+    const std::vector<SimulationRecord> records = {
         {0.05, 5.0, 185.3},
         {0.06, 4.9, 182.1}
     };
@@ -16,7 +16,7 @@ TEST(CsvExport, WriteCsvWritesHeaderLine) {
     std::string actualTitle;
 
     // Act
-    writeCsv( os, records, dt);
+    writeCsv(os, records, dt);
     const auto csv = os.str();
     std::istringstream iss(csv);
     std::getline(iss, actualTitle);
@@ -27,7 +27,7 @@ TEST(CsvExport, WriteCsvWritesHeaderLine) {
 
 TEST(CsvExport, WriteCsvWritesRecords) {
     // Arrange
-    const std::vector<SimulationRecord> records={
+    const std::vector<SimulationRecord> records = {
         {0.05, 5.0, 185.3},
         {0.06127, 4.9, 182.1}
     };
@@ -35,7 +35,7 @@ TEST(CsvExport, WriteCsvWritesRecords) {
     std::ostringstream os;
 
     // Act
-    writeCsv( os, records, dt);
+    writeCsv(os, records, dt);
     const auto csv = os.str();
     std::istringstream iss(csv);
     std::string line;

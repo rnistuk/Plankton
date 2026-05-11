@@ -8,8 +8,8 @@ TEST(Mortality, MortalityWithNoSubstrateDecreasesBiomass) {
     constexpr double kd = 0.3;
     constexpr double dt = 0.01;
 
-    const MonodParameters params{ 100.0, 2.0, 0.5, 100, kd };
-    const MonodState state{ 1.01, 0.0 };
+    const MonodParameters params{100.0, 2.0, 0.5, 100, kd};
+    const MonodState state{1.01, 0.0};
 
     // Act
     const auto [X, S] = eulerStep(state, params, I_AVG_NON_LIMITING, dt);
@@ -23,9 +23,9 @@ TEST(Mortality, MortalitySlowsGrowth) {
     constexpr double kd = 0.3;
     constexpr double dt = 0.01;
 
-    const MonodParameters params_no_mortality{ 100.0, 2.0, 0.5, 100, 0.0};
-    const MonodParameters params{ 100.0, 2.0, 0.5, 100, kd };
-    const MonodState state{ 1.01, 5.0 };
+    const MonodParameters params_no_mortality{100.0, 2.0, 0.5, 100, 0.0};
+    const MonodParameters params{100.0, 2.0, 0.5, 100, kd};
+    const MonodState state{1.01, 5.0};
 
     // Act
     const auto [X_no_mortality, S_no_mortality] = eulerStep(state, params_no_mortality, I_AVG_NON_LIMITING, dt);
