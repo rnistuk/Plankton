@@ -19,13 +19,7 @@ MainWindow::MainWindow(QWidget *parent)  : QMainWindow(parent) {
     inputLayout->addWidget(reactor);
     inputLayout->addWidget(kinetic);
 
-    this->runButton = new QPushButton("Run");
-    inputLayout->addWidget(runButton);
-    connect(runButton, &QPushButton::clicked
-        , this, &MainWindow::runSimulation);
-
     inputLayout->addStretch(1);
-
     inputLayout->setSpacing(25);
 
     auto* resultLayout = new QVBoxLayout();
@@ -41,6 +35,11 @@ MainWindow::MainWindow(QWidget *parent)  : QMainWindow(parent) {
     root->setLayout(layout);
     setCentralWidget(root);
     this->resize(1600, 800);
+
+    connect(controls, &ParameterPanel::parametersChanged, this, &MainWindow::runSimulation);
+    connect(initial,  &ParameterPanel::parametersChanged, this, &MainWindow::runSimulation);
+    connect(reactor,  &ParameterPanel::parametersChanged, this, &MainWindow::runSimulation);
+    connect(kinetic,  &ParameterPanel::parametersChanged, this, &MainWindow::runSimulation);
 
     this->runSimulation();
 }

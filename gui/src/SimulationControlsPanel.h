@@ -8,5 +8,6 @@ class SimulationControlsPanel : public ParameterPanel {
 public:
     SimulationControlsPanel(QWidget* parent = nullptr, double dt = 0.01, int numSteps = 1000);
     double dt() const;
-    int numSteps() const;
+
+    size_t numSteps() const;
 };

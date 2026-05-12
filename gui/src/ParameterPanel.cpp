@@ -19,5 +19,7 @@ QLineEdit *ParameterPanel::addRow(const QString &name, const QString &label, con
     this->m_layout->addWidget(new QLabel(units), this->m_row, 2);
     ++this->m_row;
 
+    connect(ret, &QLineEdit::editingFinished, this, &ParameterPanel::parametersChanged);
+
     return ret;
 }

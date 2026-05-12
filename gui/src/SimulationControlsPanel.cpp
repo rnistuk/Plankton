@@ -10,7 +10,6 @@ double SimulationControlsPanel::dt() const {
     return this->m_dt->text().toDouble();
 }
 
-int SimulationControlsPanel::numSteps() const {
-    return this->m_numSteps->text().toInt();
+size_t SimulationControlsPanel::numSteps() const {
+    return this->m_numSteps->text().toULongLong();
 }
-
