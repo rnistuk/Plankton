@@ -52,7 +52,7 @@ Parameters to expose: max growth rate, half-saturation constant, light extinctio
   - Tests cover: zero substrate, positive growth, substrate depletion, mass conservation
 - **Multi-step simulation** (`simulate`)
   - Signature: `simulate(const MonodState&, const SimulationParameters&, const LightModel&, bool& stop)` returns `vector<SimulationRecord>`
-  - `bool& stop` is an out-parameter the caller sets to `true` to interrupt a running simulation mid-flight (used by `SimulationRunner` in the GUI)
+  - `bool& stop` is an out-parameter the caller sets to `true` to interrupt a running simulation mid-flight
   - `LightModel` is `std::function<double(double X)>` — caller injects the light model (DIP); Beer-Lambert is the default via lambda
   - Returns initial state + num_steps records (e.g., 10 steps = 11 records total)
   - Each record captures X, S, and I_avg at that step
@@ -93,7 +93,6 @@ Parameters to expose: max growth rate, half-saturation constant, light extinctio
   - `KineticParametersPanel` — Ks, µ_max, Yx/s, Ki, kd; maps to `MonodParameters`
   - `SimulationControlsPanel` — dt, numSteps; maps to `SimulationParameters::dt` and `numSteps`
   - `Results` — `QChartView` displaying X and S time series
-- **`SimulationRunner`**: adapts `simulate()` for the GUI; holds `SimulationParameters`, `MonodState`, and `LightModel`; will use `bool& stop` to support a Stop button
 - **GUI test target**: `GuiTests` is a separate CMake executable from `PlanktonTests`, with its own `gui/test_main.cpp` that constructs a `QApplication` before `RUN_ALL_TESTS()`. Keeps `plankton_lib` and `PlanktonTests` Qt-free.
 - **Test access seam for panels**: `ParameterPanel::addRow(name, label, value, units)` calls `setObjectName(name)` on the `QLineEdit` it constructs; tests reach in via `panel.findChild<QLineEdit*>("X")` to mutate text and verify accessors read live values. This avoids exposing private members and is good Qt hygiene independent of testing. (`addRow` originally took only `(label, value, units)`; the `name` parameter was hoisted to the front during refactor — separates "what this row *is*" from "what this row *shows*".)
 - **Status**: all four input panels are fully wired. `MainWindow` orchestration is complete: panels are members, `runSimulation()` slot reads all panels, builds `SimulationParameters`, injects the Beer-Lambert lambda, calls `simulate()`, hands records to `Results::setRecords()`, and is triggered once at the end of the ctor for the initial render. `Results` series refactor is complete: `xSeries`/`sSeries` are members initialised once in the ctor with object names `"X"`/`"S"`; `createDefaultAxes()` is called once in the ctor with axis titles; `setRecords()` uses `clear()`+`append()` and explicitly updates axis ranges (horizontal: `[0, t_max]`; vertical: `[0, maxConc * 1.01]`). Fourteen GUI tests in `GuiTests` total, including `SetRecordsKeepsSeriesPointers` (verifies pointer stability across two `setRecords` calls) and a `findSeriesInChartViewNamed` helper. Next phase: live-update wiring (steps A and B — `parametersChanged()` signals + validators).
