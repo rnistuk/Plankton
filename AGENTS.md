@@ -95,7 +95,7 @@ Parameters to expose: max growth rate, half-saturation constant, light extinctio
   - `Results` — `QChartView` displaying X and S time series
 - **GUI test target**: `GuiTests` is a separate CMake executable from `PlanktonTests`, with its own `gui/test_main.cpp` that constructs a `QApplication` before `RUN_ALL_TESTS()`. Keeps `plankton_lib` and `PlanktonTests` Qt-free.
 - **Test access seam for panels**: `ParameterPanel::addRow(name, label, value, units)` calls `setObjectName(name)` on the `QLineEdit` it constructs; tests reach in via `panel.findChild<QLineEdit*>("X")` to mutate text and verify accessors read live values. This avoids exposing private members and is good Qt hygiene independent of testing. (`addRow` originally took only `(label, value, units)`; the `name` parameter was hoisted to the front during refactor — separates "what this row *is*" from "what this row *shows*".)
-- **Status**: all four input panels are fully wired. `MainWindow` orchestration is complete. `Results` series refactor is complete. Live-update wiring step A is complete: `parametersChanged()` signal declared in `ParameterPanel`, wired in `addRow()`, connected in `MainWindow` ctor; Run button removed. Fourteen GUI tests in `GuiTests` total. Next phase: step B — validators.
+- **Status**: all four input panels are fully wired. `MainWindow` orchestration is complete. `Results` series refactor is complete. Live-update wiring is complete: `parametersChanged()` signal in `ParameterPanel` base, wired in `addRow()`, connected in `MainWindow`; `QDoubleValidator`/`QIntValidator` on all inputs via `addRow()` fifth parameter. Run button removed. Fourteen GUI tests in `GuiTests` total. Next phase: generic integrator refactoring (see ❌ Not started).
 
 #### Live-update wiring plan
 
@@ -125,7 +125,7 @@ Results::setRecords(records)  ← clears & repopulates series
 **Step order (each step compiles and is small):**
 
 - **A — ✅ `parametersChanged()` signal on each panel.** Signal declared in `ParameterPanel` base class; inherited by all four subclasses. `addRow()` connects each `QLineEdit::editingFinished` → `parametersChanged` automatically — no subclass changes needed. `MainWindow` ctor connects all four panels' `parametersChanged` → `runSimulation()`. Run button removed.
-- **B — Validators.** `QDoubleValidator` on doubles (X, S, dt, Ks, µ_max, Yx_s, Ki, kd, depth, I0, k) with `bottom = 0` where appropriate; `QIntValidator` on `numSteps`. Required for `editingFinished` to behave well.
+- **B — ✅ Validators.** `QDoubleValidator(0, 1e9, 6)` on all double fields; `QIntValidator(1, 100000)` on `numSteps`. Validator passed as optional fifth argument to `addRow()` and applied there. `editingFinished` now only fires on acceptable input.
 - **C — Typed accessors on each panel.** ✅ `MonodState toState()` on `InitialConditionsPanel`; ✅ `ReactorGeometry toGeometry()` on `ReactorGeometryPanel`; ✅ `MonodParameters toParameters()` on `KineticParametersPanel`; ✅ `double dt()` and `std::size_t numSteps()` on `SimulationControlsPanel`. Each panel locked down by three tests (defaults, ctor-args, live-read).
 - **D — ✅ Promote panels to `MainWindow` members.** Done — all four panels and `Results` are members; `runSimulation()` reads them directly.
 - **E — ✅ `MainWindow::runSimulation()` slot.** Done — reads all four panels, builds `SimulationParameters`, injects Beer-Lambert lambda, calls `simulate()`, hands records to `Results::setRecords()`. Initial render triggered at end of ctor.

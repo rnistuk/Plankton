@@ -11,7 +11,9 @@ class ParameterPanel : public QGroupBox {
     int m_row = 0;
 public:
     explicit ParameterPanel(QWidget* parent = nullptr);
-    QLineEdit* addRow(const QString& name, const QString &label, const QString &value, const QString &units);
+    QLineEdit* addRow(const QString& name, const QString &label
+        , const QString &value, const QString &units
+        , QValidator *validator = nullptr);
 signals:
     void parametersChanged();
 };

@@ -11,7 +11,7 @@ ParameterPanel::ParameterPanel(QWidget *parent) : QGroupBox(parent), m_row(0) {
 }
 
 QLineEdit *ParameterPanel::addRow(const QString &name, const QString &label, const QString &value,
-                                  const QString &units) {
+                                  const QString &units, QValidator *validator) {
     QLineEdit *ret = new QLineEdit(value);
     ret->setObjectName(name);
     this->m_layout->addWidget(new QLabel(label), this->m_row, 0);
@@ -20,6 +20,7 @@ QLineEdit *ParameterPanel::addRow(const QString &name, const QString &label, con
     ++this->m_row;
 
     connect(ret, &QLineEdit::editingFinished, this, &ParameterPanel::parametersChanged);
+    ret->setValidator(validator);
 
     return ret;
 }
