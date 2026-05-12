@@ -46,7 +46,7 @@ MainWindow::MainWindow(QWidget *parent)  : QMainWindow(parent) {
 }
 
 void MainWindow::runSimulation() {
-    const auto state    = initial->toState();
+    const auto state = initial->toState();
     const auto kinetics = kinetic->toParameters();
     const auto geometry = reactor->toGeometry();
     const SimulationParameters params(kinetics, geometry,

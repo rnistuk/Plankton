@@ -16,8 +16,6 @@ add_executable(gui main.cpp
         src/Results.h
         src/SimulationControlsPanel.cpp
         src/SimulationControlsPanel.h
-        src/SimulationRunner.cpp
-        src/SimulationRunner.h
         src/ParameterPanel.cpp
         src/ParameterPanel.h)
 target_link_libraries(gui PRIVATE Qt6::Core Qt6::Widgets Qt6::Charts plankton_lib)
@@ -30,8 +28,6 @@ add_executable(GuiTests test_main.cpp
         src/ParameterPanel.h
         src/SimulationControlsPanel.h
         src/SimulationControlsPanel.cpp
-        src/SimulationRunner.cpp
-        src/SimulationRunner.h
         src/ReactorGeometryPanel.cpp
         src/ReactorGeometryPanel.h
         src/ReactorGeometryPanel_tests.cpp
