@@ -6,7 +6,7 @@ class SimulationControlsPanel : public ParameterPanel {
     QLineEdit* m_dt;
     QLineEdit* m_numSteps;
 public:
-    SimulationControlsPanel(QWidget* parent = nullptr, double dt = 0.01, int numSteps = 1000);
+    SimulationControlsPanel(QWidget* parent = nullptr, double dt = 0.01, size_t numSteps = 1000);
     double dt() const;
 
     size_t numSteps() const;

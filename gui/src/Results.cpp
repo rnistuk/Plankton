@@ -9,7 +9,8 @@ Results::Results(QWidget* parent) : QGroupBox(parent) {
     this->chartView = new QChartView(this);
     this->chartView->setObjectName("Results Chart View");
 
-    this->chart = this->createChart();
+    this->chart = new QChart();
+    this->chart->setTitle("Plankton Simulation");
     this->chart->setObjectName("Results Chart");
     this->chartView->setChart(this->chart);
 
@@ -33,25 +34,18 @@ Results::Results(QWidget* parent) : QGroupBox(parent) {
     this->setLayout(layout);
 }
 
-QChart* Results::createChart() {
-    QChart* chart = new QChart();
-    chart->setTitle("Plankton Simulation");
-
-    return chart;
-}
-
 void Results::setRecords(double dt, const std::vector<SimulationRecord>& records) {
     this->xSeries->clear();
     this->sSeries->clear();
 
-    double t = 0.0;
     double maxConc = 0.0;
-    for (const auto& record : records) {
-        this->xSeries->append(t, record.X);
-        this->sSeries->append(t, record.S);
-        maxConc = std::max(maxConc, std::max(record.X, record.S));
-        t += dt;
+    for (size_t i = 0; i < records.size(); ++i) {
+        const double t = i * dt;
+        this->xSeries->append(t, records[i].X);
+        this->sSeries->append(t, records[i].S);
+        maxConc = std::max(maxConc, std::max(records[i].X, records[i].S));
     }
-    chart->axes(Qt::Horizontal).first()->setRange(0, t - dt);
+
+    chart->axes(Qt::Horizontal).first()->setRange(0, records.size() * dt);
     chart->axes(Qt::Vertical).first()->setRange(0, maxConc * 1.01);
 }

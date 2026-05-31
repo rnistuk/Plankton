@@ -2,7 +2,7 @@
 #include <QIntValidator>
 #include <QDoubleValidator>
 
-SimulationControlsPanel::SimulationControlsPanel(QWidget* parent, double dt, int numSteps) : ParameterPanel(parent) {
+SimulationControlsPanel::SimulationControlsPanel(QWidget* parent, double dt, size_t numSteps) : ParameterPanel(parent) {
     this->setTitle("Simulation Controls");
     this->m_dt  = this->addRow("dt", "dt - Time Step"
         , QString::number(dt), "days"

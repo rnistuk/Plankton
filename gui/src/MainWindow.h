@@ -6,7 +6,6 @@
 #include "SimulationControlsPanel.h"
 
 #include <QMainWindow>
-#include <QPushButton>
 
 class MainWindow : public QMainWindow {
     Q_OBJECT
@@ -16,7 +15,6 @@ class MainWindow : public QMainWindow {
     ReactorGeometryPanel*     reactor;
     Results*                  results;
     SimulationControlsPanel*  controls;
-    QPushButton*              runButton;
 
 public:
     MainWindow(QWidget *parent = nullptr);

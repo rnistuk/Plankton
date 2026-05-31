@@ -16,6 +16,4 @@ private:
     QChartView* chartView;
     QLineSeries* xSeries;
     QLineSeries* sSeries;
-
-    QChart* createChart();
 };
